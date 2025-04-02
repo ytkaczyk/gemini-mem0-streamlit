@@ -1,0 +1,10 @@
+I am planning to create a project with python for demonstrating the mem0 library (https://docs.mem0.ai/overview). I want the demo to use:
+- Supabase as a vector database (https://docs.mem0.ai/components/vectordbs/dbs/supabase)
+- neo4j as a graph database (https://docs.mem0.ai/open-source/graph_memory/overview)
+- gemini as LLM (https://docs.mem0.ai/components/llms/models/gemini)
+- Provide a chat based frontend using streamlit (https://streamlit.io/)
+You can perform grounded searches to learn more about the technology. 
+Then create a PLANNING.md and TASK.md files.
+
+PLANNING.md - high level direction, scope, tech, etc.
+TASK.md - initial tasks to knock out for the project
