@@ -10,6 +10,7 @@ This project demonstrates the capabilities of the `mem0` library for AI memory m
 *   Vector memory storage via Supabase (pgvector).
 *   Graph memory storage via Neo4j.
 *   Persistence of memories within a single user session.
+*   Sidebar displaying the LLM model in use and an option to clear the conversation UI.
 
 ## Setup Instructions
 
@@ -35,30 +36,35 @@ This project demonstrates the capabilities of the `mem0` library for AI memory m
         ```bash
         pip install -r requirements.txt
         ```
-    *   *(Note: If `requirements.txt` is missing or outdated, you might need to install manually: `pip install "mem0ai[supabase,neo4j,gemini]" streamlit python-dotenv google-generativeai vecs langchain-neo4j rank-bm25`)*
+    *   *(This installs all necessary libraries including `mem0ai`, `streamlit`, `python-dotenv`, `google-generativeai`, and their dependencies specified in the file.)*
 
 4.  **Configure Environment Variables:**
-    *   Create a file named `.env` in the project root directory (`u:/source/mem0-demo`).
+    *   Create a file named `.env` in the project root directory (where `app.py` is located).
     *   Add your credentials to the `.env` file. **Do not commit this file to Git.**
         ```dotenv
-        # Gemini
+        # --- Gemini ---
         GOOGLE_API_KEY="your_google_ai_api_key"
 
-        # Supabase
+        # --- Supabase ---
         SUPABASE_URL="your_supabase_project_url"
         SUPABASE_SERVICE_KEY="your_supabase_service_role_key"
-        SUPABASE_CONNECTION_STRING="postgresql://postgres:[YOUR-PASSWORD]@[YOUR-HOST]:5432/postgres" # Replace with your actual connection string
-        # SUPABASE_TABLE_NAME="documents" # Optional: Specify if not default (default is 'documents')
+        # Replace with your actual Supabase database connection string
+        SUPABASE_CONNECTION_STRING="postgresql://postgres:[YOUR-PASSWORD]@[YOUR-HOST]:5432/postgres"
+        # Optional: Specify if not using the default table name 'documents'
+        # SUPABASE_TABLE_NAME="your_custom_table_name"
 
-        # Neo4j
-        NEO4J_URI="your_neo4j_uri" # e.g., neo4j+s://instance.aura.net or bolt://localhost:7687
-        NEO4J_USERNAME="your_neo4j_username" # default is often 'neo4j'
+        # --- Neo4j ---
+        # e.g., neo4j+s://instance.aura.net or bolt://localhost:7687
+        NEO4J_URI="your_neo4j_uri"
+        # Default username is often 'neo4j'
+        NEO4J_USERNAME="your_neo4j_username"
         NEO4J_PASSWORD="your_neo4j_password"
 
-        # Optional: Specify embedding/LLM models if overriding mem0 defaults
-        # EMBEDDING_MODEL="models/text-embedding-004"
-        # EMBEDDING_MODEL_DIMS="768" # Or 1536 depending on Supabase setup
-        # LLM_MODEL="gemini-1.5-flash-latest"
+        # --- LLM / Embeddings ---
+        LLM_MODEL="gemini-2.0-flash-001"
+        EMBEDDING_MODEL="models/gemini-embedding-exp-03-07"
+        # Ensure this matches the dimensions expected by your Supabase setup (e.g., 768 for text-embedding-004)
+        EMBEDDING_MODEL_DIMS="1536"
         ```
     *   Ensure your Supabase database has the `vector` extension enabled.
     *   Ensure your Neo4j instance is running and accessible.

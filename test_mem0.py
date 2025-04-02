@@ -2,6 +2,10 @@ import os
 from mem0 import Memory
 from dotenv import load_dotenv
 import logging
+import warnings
+
+# Suppress specific DeprecationWarning from pydantic v1 typing
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="pydantic.v1.typing")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -21,7 +25,7 @@ neo4j_url = os.getenv("NEO4J_URI") # Reads NEO4J_URI, but mem0 config expects 'u
 neo4j_username = os.getenv("NEO4J_USERNAME")
 neo4j_password = os.getenv("NEO4J_PASSWORD")
 embedding_model = os.getenv("EMBEDDING_MODEL", "models/text-embedding-004") # Default embedding
-embedding_model_dims = int(os.getenv("EMBEDDING_MODEL_DIMS", "768")) # Default embedding dims for Gemini
+embedding_model_dims = int(os.getenv("EMBEDDING_MODEL_DIMS", "768")) # Default embedding dims for Gemini - FIXED COMMA
 llm_model = os.getenv("LLM_MODEL", "gemini-1.5-flash-latest") # Default LLM
 
 # Validate that essential variables are loaded

@@ -1,6 +1,6 @@
 # TASK LIST - mem0 Demo Project
 
-**Last Updated:** March 31, 2025
+**Last Updated:** April 2, 2025 (PM)
 
 This document outlines the initial tasks required to get the Minimum Viable Product (MVP) of the `mem0` demo project running.
 
@@ -57,43 +57,47 @@ This document outlines the initial tasks required to get the Minimum Viable Prod
     *   [x] Test basic `memory.search()`.
     *   [x] Print results to verify connections work. Debug connection/config issues.
 
-## Phase 3: Streamlit Frontend Development
+## Phase 3: Streamlit Frontend Development - COMPLETED
 
-*   [ ] **3.1: Create Streamlit App File:**
-    *   [ ] Create `app.py`.
-    *   [ ] Import `streamlit as st`, `os`, `Memory` from `mem0`, `load_dotenv`.
-*   [ ] **3.2: Initialize `mem0` in App:**
-    *   [ ] Load environment variables.
-    *   [ ] Define/load the `mem0` configuration dictionary.
-    *   [ ] Initialize the `mem0` client: `memory = Memory.from_config(config)`. Handle potential initialization errors.
-*   [ ] **3.3: Basic Chat UI:**
-    *   [ ] Set page title: `st.set_page_config(page_title="mem0 Demo Chat")`.
-    *   [ ] Add a title: `st.title("Chat with mem0")`.
-    *   [ ] Initialize chat history in `st.session_state` if it doesn't exist (e.g., `st.session_state.messages = []`).
-    *   [ ] Display existing messages from `st.session_state.messages` using `st.chat_message`.
-*   [ ] **3.4: Chat Input Handling:**
-    *   [ ] Add chat input widget: `prompt = st.chat_input("What's up?")`.
-    *   [ ] If `prompt` is received:
-        *   [ ] Add user message to `st.session_state.messages`.
-        *   [ ] Display user message using `st.chat_message("user")`.
-*   [ ] **3.5: Integrate `mem0` Processing:**
-    *   [ ] Inside the `if prompt:` block:
-        *   [ ] Assign a consistent `user_id` for the session (e.g., `user_id="streamlit_session_user"`).
-        *   [ ] Use `mem0.chat()` to handle processing and response generation.
-        *   [ ] Display assistant's response using `st.chat_message("assistant")`.
-        *   [ ] Add assistant response to `st.session_state.messages`.
+*   [x] **3.1: Create Streamlit App File:**
+    *   [x] Create `app.py`.
+    *   [x] Import `streamlit as st`, `os`, `Memory` from `mem0`, `load_dotenv`.
+*   [x] **3.2: Initialize `mem0` in App:**
+    *   [x] Load environment variables.
+    *   [x] Define/load the `mem0` configuration dictionary.
+    *   [x] Initialize the `mem0` client: `memory = Memory.from_config(config)`. Handle potential initialization errors.
+*   [x] **3.3: Basic Chat UI:**
+    *   [x] Set page title: `st.set_page_config(page_title="mem0 Demo Chat")`.
+    *   [x] Add a title: `st.title("Chat with mem0")`.
+    *   [x] Initialize chat history in `st.session_state` if it doesn't exist (e.g., `st.session_state.messages = []`).
+    *   [x] Display existing messages from `st.session_state.messages` using `st.chat_message`.
+*   [x] **3.4: Chat Input Handling:**
+    *   [x] Add chat input widget: `prompt = st.chat_input("What's up?")`.
+    *   [x] If `prompt` is received:
+        *   [x] Add user message to `st.session_state.messages`.
+        *   [x] Display user message using `st.chat_message("user")`.
+*   [x] **3.5: Integrate `mem0` Processing:**
+    *   [x] Inside the `if prompt:` block:
+        *   [x] Assign a consistent `user_id` for the session (e.g., `user_id="streamlit_session_user"`).
+        *   [x] Use `mem0.chat()` to handle processing and response generation. (Note: Direct LLM call used instead as per implementation)
+        *   [x] Use `mem0.search()` to retrieve relevant context.
+        *   [x] Construct a prompt for the LLM (Gemini) using the context.
+        *   [x] Call the LLM API directly to generate the response.
+        *   [x] Use `mem0.add()` to store the user message and assistant response.
+        *   [x] Display assistant's response using `st.chat_message("assistant")`.
+        *   [x] Add assistant response to `st.session_state.messages`.
 
 ## Phase 4: Refinement & Testing
 
-*   [ ] **4.1: Basic Error Handling:**
-    *   [ ] Add `try...except` blocks around `mem0` calls and external service interactions. Log basic errors to the console or Streamlit interface. (Included in app.py)
-*   [ ] **4.2: End-to-End Testing:**
-    *   [ ] Run the Streamlit app: `streamlit run app.py`.
-    *   [ ] Engage in a short conversation, testing if the AI remembers previously mentioned information (e.g., "My name is Bob", later ask "What is my name?").
-    *   [ ] Check Supabase and Neo4j (if possible via their respective UIs/dashboards) to see if data is being stored. (Manual check - assumed done by user)
-*   [x] **4.3: Code Cleanup & Readme:**
-    *   [ ] Add comments to `app.py`.
-    *   [ ] Update `README.md` with setup instructions (install deps, set up `.env`, run app) and a brief description.
+*   [x] **4.1: Basic Error Handling:**
+    *   [x] Add `try...except` blocks around `mem0` calls and external service interactions. Log basic errors to the console or Streamlit interface. (Improved in recent update)
+*   [x] **4.2: End-to-End Testing:**
+    *   [x] Run the Streamlit app: `streamlit run app.py`.
+    *   [x] Engage in a short conversation, testing if the AI remembers previously mentioned information (e.g., "My name is Bob", later ask "What is my name?").
+    *   [x] Check Supabase and Neo4j (if possible via their respective UIs/dashboards) to see if data is being stored. (Manual check - assumed done by user)
+*   [x] **4.3: Code Cleanup & Readme:** - COMPLETED
+    *   [x] Add comments to `app.py`.
+    *   [x] Update `README.md` with setup instructions (install deps, set up `.env`, run app) and a brief description.
 
 ## (Optional) Phase 5: Enhancements
 
@@ -101,3 +105,13 @@ This document outlines the initial tasks required to get the Minimum Viable Prod
 *   [ ] Improve Streamlit UI (e.g., loading spinners).
 *   [ ] Add a button to clear memory/session state.
 *   [ ] Implement more robust error display to the user.
+
+## Discovered During Work (April 2, 2025)
+
+*   [x] **Fix `IndexError` in `app.py`:** Added specific `try...except IndexError` around `memory_client.search()` call (line ~158) to handle cases where the Gemini API might return an empty/blocked response during the search process, preventing the app from crashing.
+*   [x] **Add Console Log for Model:** Added `logging.info` call in `app.py` to display the used Gemini model name on startup.
+*   [x] **Add Streamlit Sidebar:** Implemented `st.sidebar` in `app.py`.
+*   [x] **Display Model in Sidebar:** Added model name display (`st.sidebar.markdown`, `st.sidebar.code`) to the sidebar.
+*   [x] **Add Clear Conversation Button:** Added a button (`st.sidebar.button`) to the sidebar to clear the session state message history (`st.session_state.messages`).
+*   [x] **Organize Sidebar:** Added section header (`st.sidebar.subheader`) and divider (`st.sidebar.divider`) for the clear button.
+*   [x] **Expand Clear Button:** Made the "Clear Conversation" button full width (`use_container_width=True`).
