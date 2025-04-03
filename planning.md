@@ -12,6 +12,7 @@ To create a functional Python demonstration showcasing the `mem0` library's capa
 
 *   Initialize `mem0` with Supabase, Neo4j, and Gemini configurations.
 *   Create a basic Streamlit application with a chat input and message display area.
+*   Implement user authentication using Supabase Auth.
 *   Process user chat input through `mem0`.
 *   Store conversation context/memories using `mem0`'s configured vector (Supabase) and graph (Neo4j) stores.
 *   Retrieve relevant context from `mem0` to inform Gemini's responses within the chat flow.
@@ -21,9 +22,8 @@ To create a functional Python demonstration showcasing the `mem0` library's capa
 **Out of Scope (Initial Version):**
 
 *   Advanced `mem0` features (e.g., specific memory editing, complex graph queries beyond default behavior).
-*   Multi-user support (demo will focus on a single, potentially anonymous, session).
-*   User authentication or login.
-*   Production-level error handling and logging.
+*   Multi-user support beyond basic authenticated sessions.
+*   Production-level error handling and logging beyond Streamlit/mem0 basics.
 *   Deployment to a cloud platform.
 *   Advanced Streamlit UI features (e.g., user profiles, history browsing).
 *   Fine-tuning LLM prompts or behavior beyond basic configuration.
@@ -47,10 +47,11 @@ The application will provide a simple chat interface. When a user types a messag
 *   **Memory Layer:** `mem0` library (`mem0ai`)
 *   **LLM:** Google Gemini (via `mem0` integration or directly via `google-generativeai` if needed)
 *   **Vector Database:** Supabase (using `pgvector` extension)
+*   **Authentication:** Supabase Auth
 *   **Graph Database:** Neo4j (AuraDB free tier recommended, or local Docker instance)
 *   **Frontend Framework:** Streamlit
 *   **Environment Management:** `venv` or `conda`
-*   **Dependencies:** `mem0ai[supabase,neo4j,gemini]`, `streamlit`, `python-dotenv`, `google-generativeai` (potentially)
+*   **Dependencies:** `mem0ai[supabase,neo4j,gemini]`, `streamlit`, `python-dotenv`, `supabase`, `google-generativeai` (potentially)
 
 ## 5. Architecture Overview
 
@@ -82,9 +83,9 @@ The application will provide a simple chat interface. When a user types a messag
 
 ## 6. Key Considerations & Risks
 
-*   **API Keys/Credentials:** Securely managing keys for Gemini, Supabase, and Neo4j is critical. Use environment variables (`.env` file and `python-dotenv`).
-*   **Database Setup:** Correctly setting up Supabase (enabling `vector` extension, creating table with correct dimensions) and Neo4j (instance accessible, credentials correct, APOC plugins if local) is required before running the app.
-*   **`mem0` Configuration:** Ensuring the `mem0` configuration dictionary correctly points to all services with the right parameters is vital. Referencing `mem0` documentation is key.
+*   **API Keys/Credentials:** Securely managing keys for Gemini, Supabase (DB and Auth), and Neo4j is critical. Use environment variables (`.env` file and `python-dotenv`). Ensure Supabase URL and Anon Key (often used for client-side Auth) are available alongside Service Role Key (for server-side DB access).
+*   **Database & Auth Setup:** Correctly setting up Supabase (enabling `vector` extension, creating table with correct dimensions, configuring Auth settings like providers/email templates) and Neo4j (instance accessible, credentials correct, APOC plugins if local) is required.
+*   **`mem0` Configuration:** Ensuring the `mem0` configuration dictionary correctly points to all services with the right parameters is vital. Referencing `mem0` documentation is key. The `user_id` passed to `mem0` should correspond to the authenticated user.
 *   **Dependency Compatibility:** Potential for version conflicts between libraries. Pinning versions might be necessary.
 *   **LLM Costs:** Gemini API usage might incur costs. Monitor usage.
 *   **`mem0` Understanding:** `mem0` handles much of the complexity, but understanding its basic workflow (add, search, context injection) is needed for effective integration.
