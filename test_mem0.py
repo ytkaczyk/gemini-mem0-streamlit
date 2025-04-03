@@ -51,9 +51,8 @@ else:
 # Structure based on mem0 documentation examples
 config = {
     "vector_store": {
-        "provider": "supabase", # Error indicated Supabase uses pgvector provider internally
+        "provider": "supabase",
         "config": {
-            # Based on error: "Please input only the following fields: index_method, connection_string, embedding_model_dims, index_measure, collection_name"
             "connection_string": supabase_connection_string,
             "collection_name": supabase_table_name,
             "embedding_model_dims": embedding_model_dims,
@@ -64,8 +63,7 @@ config = {
     "graph_store": {
         "provider": "neo4j",
         "config": {
-            # Based on error: "Please provide 'url', 'username' and 'password'."
-            "url": neo4j_url, # Use 'url' instead of 'uri'
+            "url": neo4j_url,
             "username": neo4j_username,
             "password": neo4j_password,
         }
@@ -90,7 +88,6 @@ config = {
             "model": embedding_model,
             "embedding_dims": embedding_model_dims,
             "api_key": google_api_key,
-            # "task_type" is not a valid argument here according to the error and docs
         }
     },
     "history_manager": {

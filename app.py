@@ -218,7 +218,11 @@ if prompt := st.chat_input("Ask me anything..."):
 
         # --- Step 2: Prepare prompt for Gemini ---
         # Reason: Constructs the system prompt, instructing the LLM on how to behave and providing retrieved memories as context.
-        system_prompt = f"You are a helpful AI assistant. Answer the user's query based on the query and the following potentially relevant past memories. If the memories are not relevant, answer the query directly. Do not answer with memories that are not relevant to the query.\n\nRelevant Memories:\n{memories_str if memories_str else 'None'}"
+        system_prompt = (
+            "You are a helpful AI assistant. Answer the user's query based on the query and the following potentially relevant past memories. "
+            "If the memories are not relevant, answer the query directly. Do not answer with memories that are not relevant to the query.\n\n"
+            f"Relevant Memories:\n{memories_str if memories_str else 'None'}"
+        )
 
         # Construct message history for Gemini API
         # Reason: Gemini API expects a specific format. Here, we combine the system instructions and the user's actual prompt.
