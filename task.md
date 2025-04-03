@@ -99,13 +99,6 @@ This document outlines the initial tasks required to get the Minimum Viable Prod
     *   [x] Add comments to `app.py`.
     *   [x] Update `README.md` with setup instructions (install deps, set up `.env`, run app) and a brief description.
 
-## (Optional) Phase 5: Enhancements
-
-*   [ ] Explore more advanced `mem0` search/query options.
-*   [ ] Improve Streamlit UI (e.g., loading spinners).
-*   [ ] Add a button to clear memory/session state.
-*   [ ] Implement more robust error display to the user.
-
 ## Discovered During Work (April 2, 2025)
 
 *   [x] **Fix `IndexError` in `app.py`:** Added specific `try...except IndexError` around `memory_client.search()` call (line ~158) to handle cases where the Gemini API might return an empty/blocked response during the search process, preventing the app from crashing.
@@ -115,3 +108,42 @@ This document outlines the initial tasks required to get the Minimum Viable Prod
 *   [x] **Add Clear Conversation Button:** Added a button (`st.sidebar.button`) to the sidebar to clear the session state message history (`st.session_state.messages`).
 *   [x] **Organize Sidebar:** Added section header (`st.sidebar.subheader`) and divider (`st.sidebar.divider`) for the clear button.
 *   [x] **Expand Clear Button:** Made the "Clear Conversation" button full width (`use_container_width=True`).
+
+## Phase 5: User Authentication (April 2, 2025)
+
+*   [ ] **5.1: Update Planning & Task Docs:**
+    *   [x] Update `PLANNING.md` scope, tech stack, considerations.
+    *   [x] Add Phase 5 tasks to `TASK.md`.
+*   [ ] **5.2: Install Supabase Client:**
+    *   [ ] Add `supabase-py` to `requirements.txt`.
+    *   [ ] Run `pip install -r requirements.txt`.
+*   [ ] **5.3: Add Supabase Auth Credentials:**
+    *   [ ] Ensure `SUPABASE_URL` and `SUPABASE_ANON_KEY` are in `.env` (Anon key is typically used for client-side auth).
+*   [ ] **5.4: Implement Login UI:**
+    *   [ ] Create a function `show_login_form()` in `app.py`.
+    *   [ ] Use `st.text_input` for email and password.
+    *   [ ] Add "Login" and "Sign Up" buttons.
+*   [ ] **5.5: Implement Auth Logic:**
+    *   [ ] Initialize Supabase client (`create_client` from `supabase`).
+    *   [ ] Handle Login button click: Call `supabase.auth.sign_in_with_password()`. Store session in `st.session_state`.
+    *   [ ] Handle Sign Up button click: Call `supabase.auth.sign_up()`. Provide feedback to user (e.g., check email).
+    *   [ ] Add a "Logout" button (e.g., in sidebar) if a user session exists: Call `supabase.auth.sign_out()`. Clear session state.
+*   [ ] **5.6: Gate App Access:**
+    *   [ ] In `app.py`, check if `st.session_state.user_session` exists.
+    *   [ ] If not logged in, call `show_login_form()` and use `st.stop()` to prevent the main chat app from rendering.
+    *   [ ] If logged in, display the main chat interface.
+*   [ ] **5.7: Use Authenticated User ID for `mem0`:**
+    *   [ ] When logged in, extract the user ID from `st.session_state.user_session.user.id`.
+    *   [ ] Pass this user ID to `mem0.add()` and `mem0.search()` instead of the static ID.
+*   [ ] **5.8: Testing:**
+    *   [ ] Test Sign Up flow.
+    *   [ ] Test Login flow.
+    *   [ ] Test Logout flow.
+    *   [ ] Verify chat history is associated with the logged-in user (requires checking `mem0` storage or observing behavior across logins).
+
+## (Optional) Further Enhancements
+
+*   [ ] Explore more advanced `mem0` search/query options.
+*   [ ] Improve Streamlit UI (e.g., loading spinners).
+*   [ ] Add a button to clear memory/session state.
+*   [ ] Implement more robust error display to the user.
