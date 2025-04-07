@@ -1,10 +1,11 @@
 import streamlit as st
-import os
 from mem0 import Memory
 from dotenv import load_dotenv
 import logging
 import warnings
+from utils import Config, load_config, validate_variables
 import google.generativeai as genai
+from supabase import create_client, Client, AuthApiError # Added for Supabase Auth
 
 # --- Initial Setup ---
 
@@ -22,36 +23,12 @@ st.set_page_config(page_title="mem0 Demo Chat", layout="wide")
 
 # --- Configuration Loading ---
 # Load environment variables from .env file
-# Reason: Securely loads API keys and connection strings without hardcoding them.
 load_dotenv()
 logging.info("App: Loaded environment variables.")
+config = load_config(logging)
 
-# Retrieve credentials and config from environment variables
-# Reason: Makes configuration flexible and avoids exposing secrets in code.
-google_api_key = os.getenv("GOOGLE_API_KEY")
-supabase_connection_string = os.getenv("SUPABASE_CONNECTION_STRING")
-supabase_table_name = os.getenv("SUPABASE_TABLE_NAME", "documents") # Default table name if not specified
-neo4j_url = os.getenv("NEO4J_URI")
-neo4j_username = os.getenv("NEO4J_USERNAME")
-neo4j_password = os.getenv("NEO4J_PASSWORD")
-embedding_model = os.getenv("EMBEDDING_MODEL", "models/text-embedding-004") # Default embedding model
-embedding_model_dims = int(os.getenv("EMBEDDING_MODEL_DIMS", "768")) # Default dimensions, ensure integer type
-llm_model = os.getenv("LLM_MODEL", "gemini-1.5-flash-latest") # Default LLM model
-
-# Validate essential variables
-# Reason: Ensures the app doesn't start without critical configuration, preventing runtime errors later.
-essential_vars = {
-    "GOOGLE_API_KEY": google_api_key,
-    "SUPABASE_CONNECTION_STRING": supabase_connection_string,
-    "NEO4J_URI": neo4j_url,
-    "NEO4J_USERNAME": neo4j_username,
-    "NEO4J_PASSWORD": neo4j_password,
-}
-missing_vars = [name for name, value in essential_vars.items() if not value]
-if missing_vars:
-    st.error(f"Missing essential environment variables in .env file: {', '.join(missing_vars)}")
-    logging.error(f"App: Missing essential environment variables: {', '.join(missing_vars)}")
-    st.stop() # Stop the app if config is missing
+# CallValidate variables 
+validate_variables(st, logging, config)
 
 # Define the mem0 configuration dictionary
 # Reason: Centralizes the configuration for mem0, making it easy to manage connections.
@@ -60,32 +37,32 @@ mem0_config = {
     "vector_store": { # Configuration for the vector database (Supabase)
         "provider": "supabase",
         "config": {
-            "connection_string": supabase_connection_string,
-            "collection_name": supabase_table_name,
-            "embedding_model_dims": embedding_model_dims, # Must match the dimensions of the chosen embedding model
+            "connection_string": config.supabase_connection_string,
+            "collection_name": config.supabase_table_name,
+            "embedding_model_dims": config.embedding_model_dims, # Must match the dimensions of the chosen embedding model
         }
     },
     "graph_store": { # Configuration for the graph database (Neo4j)
         "provider": "neo4j",
         "config": {
-            "url": neo4j_url, # Connection URI for Neo4j instance
-            "username": neo4j_username,
-            "password": neo4j_password, # Password for Neo4j user
+            "url": config.neo4j_url, # Connection URI for Neo4j instance
+            "username": config.neo4j_username,
+            "password": config.neo4j_password, # Password for Neo4j user
         }
     },
     "llm": { # Configuration for the Language Model (Gemini) used by mem0 internally
         "provider": "gemini",
         "config": {
-            "model": llm_model, # Specific Gemini model to use
-            "api_key": google_api_key, # API key for Gemini
+            "model": config.llm_model, # Specific Gemini model to use
+            "api_key": config.google_api_key, # API key for Gemini
         }
     },
     "embedder": { # Configuration for the embedding model (Gemini)
         "provider": "gemini",
         "config": {
-            "model": embedding_model, # Specific Gemini embedding model
-            "embedding_dims": embedding_model_dims, # Dimensions required by the model
-            "api_key": google_api_key,
+            "model": config.embedding_model, # Specific Gemini embedding model
+            "embedding_dims": config.embedding_model_dims, # Dimensions required by the model
+            "api_key": config.google_api_key,
         }
     },
     # History manager config omitted for simplicity in app v1
@@ -97,15 +74,16 @@ mem0_config = {
 @st.cache_resource
 def initialize_clients():
     """
-    Initializes and returns the mem0 and Gemini clients based on the configuration.
+    Initializes and returns the mem0, Gemini, and Supabase clients based on the configuration.
     Uses st.cache_resource to ensure clients are created only once per session.
 
     Returns:
-        tuple: A tuple containing the initialized mem0 client and Gemini client,
-               or (None, None) if initialization fails for either.
+        tuple: A tuple containing the initialized mem0, Gemini, and Supabase clients,
+               or (None, None, None) if initialization fails for any.
     """
     mem_client = None
     gemini_client = None
+    supabase_client: Client | None = None
 
     # Initialize mem0 client
     logging.info("App: Initializing mem0 client...")
@@ -120,53 +98,174 @@ def initialize_clients():
     # Initialize Gemini client (used for direct LLM calls in this app)
     logging.info("App: Initializing Gemini client...")
     try:
-        if google_api_key:
+        if config.embedding_model and config.google_api_key:
             # Reason: Configures the global genai library with the API key.
-            genai.configure(api_key=google_api_key)
+            genai.configure(api_key=config.google_api_key)
             # Reason: Creates a client instance for the specified Gemini model.
-            gemini_client = genai.GenerativeModel(llm_model)
+            gemini_client = genai.GenerativeModel(config.llm_model)
             logging.info("App: Gemini client initialized successfully.")
         else:
              # Reason: Gemini client cannot function without an API key.
              logging.error("App: GOOGLE_API_KEY not found for Gemini client initialization.")
              st.error("GOOGLE_API_KEY not found. Cannot initialize Gemini client.")
         if gemini_client:
-             logging.info(f"App: Using Gemini model: {llm_model}") # Log the model name
+             logging.info(f"App: Using Gemini model: {config.llm_model}") # Log the model name
     except Exception as e:
         logging.error(f"App: Failed to initialize Gemini client: {e}", exc_info=True)
         st.error(f"Failed to initialize Gemini client: {e}")
 
-    return mem_client, gemini_client
+    # Initialize Supabase client (for Auth)
+    logging.info("App: Initializing Supabase client...")
+    try:
+        if config.supabase_url and config.supabase_anon_key:
+            # Reason: Creates the Supabase client instance needed for authentication operations.
+            supabase_client = create_client(config.supabase_url, config.supabase_anon_key)
+            logging.info("App: Supabase client initialized successfully.")
+        else:
+            # Reason: Supabase Auth requires both URL and Anon Key.
+            logging.error("App: SUPABASE_URL or SUPABASE_ANON_KEY not found for Supabase client initialization.")
+            st.error("SUPABASE_URL or SUPABASE_ANON_KEY not found. Cannot initialize Supabase client.")
+    except Exception as e:
+        logging.error(f"App: Failed to initialize Supabase client: {e}", exc_info=True)
+        st.error(f"Failed to initialize Supabase client: {e}")
 
-memory_client, gemini_llm_client = initialize_clients()
+    return mem_client, gemini_client, supabase_client
 
-if not memory_client or not gemini_llm_client:
-    st.warning("One or more clients could not be initialized. Please check logs and configuration.")
+memory_client, gemini_llm_client, supabase = initialize_clients() # Added supabase client
+
+if not memory_client or not gemini_llm_client or not supabase:
+    st.warning("One or more clients (mem0, Gemini, Supabase) could not be initialized. Please check logs and configuration.")
     st.stop() # Stop execution if clients fail to initialize
+
+# --- Authentication Logic ---
+
+# Initialize session state for user session if it doesn't exist
+# Reason: Tracks the logged-in user's session information across reruns.
+if 'user_session' not in st.session_state:
+    st.session_state.user_session = None
+    logging.info("App: Initialized user_session in session state.")
+
+def show_login_form():
+    """
+    Displays the login/signup form and handles authentication logic.
+    """
+    st.title("Login / Sign Up")
+    st.caption("Please log in or sign up to use the chat.")
+
+    with st.form("login_form"):
+        email = st.text_input("Email")
+        password = st.text_input("Password", type="password")
+        col1, col2 = st.columns(2)
+        with col1:
+            login_button = st.form_submit_button("Login")
+        with col2:
+            signup_button = st.form_submit_button("Sign Up")
+
+        if login_button:
+            if not email or not password:
+                st.error("Please enter both email and password.")
+            else:
+                try:
+                    logging.info(f"App: Attempting login for user: {email}")
+                    # Call Supabase Auth to sign the user in.
+                    session = supabase.auth.sign_in_with_password({"email": email, "password": password})
+                    st.session_state.user_session = session # Store session info
+                    logging.info(f"App: Login successful for user: {email}")
+                    st.success("Login successful!")
+                    st.rerun() # Rerun to show the main app
+                except AuthApiError as e:
+                    logging.error(f"App: Login failed for {email}: {e.message}")
+                    st.error(f"Login failed: {e.message}")
+                except Exception as e:
+                    logging.error(f"App: An unexpected error occurred during login: {e}", exc_info=True)
+                    st.error("An unexpected error occurred during login.")
+
+        if signup_button:
+            if not email or not password:
+                st.error("Please enter both email and password.")
+            else:
+                try:
+                    logging.info(f"App: Attempting signup for user: {email}")
+                    # Reason: Calls Supabase Auth to sign the user up.
+                    session = supabase.auth.sign_up({"email": email, "password": password})
+                    # Note: Supabase often requires email confirmation by default.
+                    # The session returned here might not be fully active until confirmation.
+                    # st.session_state.user_session = session # Optionally log in immediately, or wait for confirmation
+                    logging.info(f"App: Signup successful for user: {email}. Session: {session}")
+                    st.success("Sign up successful! Please check your email for a confirmation link if required by your Supabase settings.")
+                    # Don't rerun automatically on signup, let user log in after confirming.
+                except AuthApiError as e:
+                    logging.error(f"App: Signup failed for {email}: {e.message}")
+                    st.error(f"Sign up failed: {e.message}")
+                except Exception as e:
+                    logging.error(f"App: An unexpected error occurred during signup: {e}", exc_info=True)
+                    st.error("An unexpected error occurred during signup.")
 
 # --- Streamlit UI Setup ---
 
 # Sidebar Section
 # Reason: Provides users with configuration info and control options without cluttering the main chat area.
 st.sidebar.title("Gemini & mem0 Demo")
-st.sidebar.subheader("⚙️ Settings")
-st.sidebar.markdown("Gemini model:")
-st.sidebar.code(llm_model, language=None) # Display model name read from env
+
+# --- Authentication Display and Logout ---
+# Reason: Shows user status and provides logout functionality in the sidebar.
+st.sidebar.subheader("👤 Account")
+if st.session_state.user_session:
+    user_email = st.session_state.user_session.user.email
+    st.sidebar.markdown(f"Logged in as:")
+    st.sidebar.code(user_email, language=None)
+    if st.sidebar.button("Logout", use_container_width=True):
+        try:
+            logging.info(f"App: Logging out user: {user_email}")
+            # Reason: Calls Supabase Auth to invalidate the current session.
+            supabase.auth.sign_out()
+            st.session_state.user_session = None # Clear session state
+            st.session_state.messages = [] # Clear chat history on logout
+            logging.info("App: Logout successful.")
+            st.rerun() # Rerun to show the login form
+        except AuthApiError as e:
+            logging.error(f"App: Logout failed: {e.message}")
+            st.sidebar.error(f"Logout failed: {e.message}")
+        except Exception as e:
+            logging.error(f"App: An unexpected error occurred during logout: {e}", exc_info=True)
+            st.sidebar.error("An unexpected error during logout.")
+else:
+    st.sidebar.markdown("Status: Logged Out")
 
 st.sidebar.divider() # Visual separator
+
+# --- Model Information ---
+st.sidebar.subheader("🤖 Model")
+st.sidebar.markdown("Gemini model:")
+st.sidebar.code(config.llm_model, language=None) # Display model name read from config
+st.sidebar.markdown("Embedding model:")
+st.sidebar.code(config.embedding_model, language=None) # Display embedding model name read from config
+
+st.sidebar.divider() # Visual separator
+
 st.sidebar.subheader("💬 Conversation")
 # Reason: Allows users to easily start a fresh conversation without restarting the app.
-if st.sidebar.button("Clear Conversation", use_container_width=True):
-    # Reason: Resets the chat message list stored in Streamlit's session state.
-    st.session_state.messages = []
-    logging.info("App: Conversation history cleared by user.")
-    # Optional: Could also add logic here to clear mem0 history for the user_id if needed.
-    # Reason: Immediately refreshes the page to show the empty chat history.
-    st.rerun()
+# Only show clear button if logged in
+if st.session_state.user_session:
+    if st.sidebar.button("Clear Conversation", use_container_width=True):
+        # Reason: Resets the chat message list stored in Streamlit's session state.
+        st.session_state.messages = []
+        logging.info(f"App: Conversation history cleared by user: {st.session_state.user_session.user.email}")
+        st.rerun()
 
-# Main Page Section
+# --- Main Application Logic ---
+
+# Gate access based on login status
+# Reason: Ensures only authenticated users can access the chat functionality.
+if not st.session_state.user_session:
+    show_login_form()
+    st.stop() # Stop execution if not logged in
+
+# --- Logged-in Chat Interface ---
+# This section only runs if the user is logged in.
+
 st.title("🧠 Chat with mem0")
-st.caption("A simple chat interface demonstrating mem0 with Gemini, Supabase, and Neo4j.")
+st.caption(f"Logged in as {st.session_state.user_session.user.email}. Using mem0 with Gemini, Supabase, and Neo4j.")
 
 # Initialize chat history in session state if it doesn't exist
 # Reason: Persists messages across reruns within the same user session.
@@ -195,7 +294,9 @@ if prompt := st.chat_input("Ask me anything..."):
         st.markdown(prompt)
 
     # Process the prompt using mem0 and Gemini
-    user_id = "streamlit_session_user" # Simple static user ID for this single-user demo
+    # --- Step 5.7: Use Authenticated User ID ---
+    # Reason: Associates memories and searches with the specific logged-in user.
+    user_id = st.session_state.user_session.user.id
     assistant_response = None # Initialize assistant response variable
 
     # Main processing block with general error handling
@@ -210,6 +311,10 @@ if prompt := st.chat_input("Ask me anything..."):
             # Reason: Formats the retrieved memories into a simple string for the LLM prompt.
             memories_str = "\n".join(f"- {entry['memory']}" for entry in relevant_memories.get("results", []))
             logging.info(f"App: Found relevant memories:\n{memories_str if memories_str else 'None'}") # Log found memories or None
+
+            with st.chat_message("memory info", avatar="🧠"):
+                st.markdown(f"**Relevant Memories:**\n{memories_str if memories_str else 'None'}")
+                
         except IndexError as ie:
             # Reason: Specific handling for IndexError observed during mem0 search, likely due to LLM issues within mem0.
             logging.error(f"App: IndexError during memory search for query '{prompt}': {ie}. Likely an empty/blocked response from LLM during search.", exc_info=True)
@@ -226,10 +331,12 @@ if prompt := st.chat_input("Ask me anything..."):
 
         # Construct message history for Gemini API
         # Reason: Gemini API expects a specific format. Here, we combine the system instructions and the user's actual prompt.
-        # Note: For more complex conversations, you might include more turns from st.session_state.messages.
-        gemini_messages = [
-            {'role': 'user', 'parts': [system_prompt, prompt]} # Gemini API structure requires 'user'/'model' roles and 'parts' list
-        ]
+        # Include previous conversation turns to maintain context.
+        gemini_messages = []
+        gemini_messages.append({'role': 'user', 'parts': [system_prompt]}) # System prompt goes first
+        for msg in st.session_state.messages: # Iterate through existing messages
+            gemini_messages.append({'role': msg['role'], 'parts': [msg['content']]}) # Add each message to the history
+        gemini_messages.append({'role': 'user', 'parts': [prompt]}) # Finally, add the current user prompt
 
         # --- Step 3: Call Gemini LLM ---
         logging.info("App: Calling Gemini API...")
@@ -279,9 +386,23 @@ if prompt := st.chat_input("Ask me anything..."):
                 {"role": "user", "content": prompt},
                 {"role": "assistant", "content": assistant_response}
             ]
-            logging.info(f"App: Adding conversation turn to mem0 for user '{user_id}'")
-            # Reason: Calls mem0's add method to process and store the conversation turn in vector/graph stores.
-            memory_client.add(conversation_turn, user_id=user_id)
+            user_email = st.session_state.user_session.user.email # Get user email from session
+            logging.info(f"App: Adding conversation turn to mem0 for user '{user_id}' with email '{user_email}'")
+            # Reason: Calls mem0's add method to process and store the conversation turn in vector/graph stores, including email metadata.
+            memory_change_results = memory_client.add(
+                conversation_turn,
+                user_id=user_id,
+                metadata={"email": user_email} # Add email as metadata
+            )
+
+            memories_chages_str = \
+                "\n".join(f"- ✔️ {entry['memory']}" for entry in memory_change_results.get("results", []) if entry.get("event", "") == "ADD") + \
+                "\n".join(f"- ❌ {entry['memory']}" for entry in memory_change_results.get("results", []) if entry.get("event", "") == "DELETE") + \
+                "\n".join(f"- ♻️ {entry['previous_memory']} ➡️ {entry['memory']}" for entry in memory_change_results.get("results", []) if entry.get("event", "") == "UPDATE")
+
+            with st.chat_message("memory info", avatar="🧠"):
+                st.markdown(f"**Updated Memories:**\n{memories_chages_str if memories_chages_str else 'None'}")
+
             logging.info("App: Conversation turn added to mem0.")
 
             # Add assistant response to Streamlit history and display it

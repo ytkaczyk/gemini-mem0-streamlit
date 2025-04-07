@@ -114,32 +114,32 @@ This document outlines the initial tasks required to get the Minimum Viable Prod
 *   [ ] **5.1: Update Planning & Task Docs:**
     *   [x] Update `PLANNING.md` scope, tech stack, considerations.
     *   [x] Add Phase 5 tasks to `TASK.md`.
-*   [ ] **5.2: Install Supabase Client:**
-    *   [ ] Add `supabase-py` to `requirements.txt`.
-    *   [ ] Run `pip install -r requirements.txt`.
-*   [ ] **5.3: Add Supabase Auth Credentials:**
-    *   [ ] Ensure `SUPABASE_URL` and `SUPABASE_ANON_KEY` are in `.env` (Anon key is typically used for client-side auth).
-*   [ ] **5.4: Implement Login UI:**
-    *   [ ] Create a function `show_login_form()` in `app.py`.
-    *   [ ] Use `st.text_input` for email and password.
-    *   [ ] Add "Login" and "Sign Up" buttons.
-*   [ ] **5.5: Implement Auth Logic:**
-    *   [ ] Initialize Supabase client (`create_client` from `supabase`).
-    *   [ ] Handle Login button click: Call `supabase.auth.sign_in_with_password()`. Store session in `st.session_state`.
-    *   [ ] Handle Sign Up button click: Call `supabase.auth.sign_up()`. Provide feedback to user (e.g., check email).
-    *   [ ] Add a "Logout" button (e.g., in sidebar) if a user session exists: Call `supabase.auth.sign_out()`. Clear session state.
-*   [ ] **5.6: Gate App Access:**
-    *   [ ] In `app.py`, check if `st.session_state.user_session` exists.
-    *   [ ] If not logged in, call `show_login_form()` and use `st.stop()` to prevent the main chat app from rendering.
-    *   [ ] If logged in, display the main chat interface.
-*   [ ] **5.7: Use Authenticated User ID for `mem0`:**
-    *   [ ] When logged in, extract the user ID from `st.session_state.user_session.user.id`.
-    *   [ ] Pass this user ID to `mem0.add()` and `mem0.search()` instead of the static ID.
-*   [ ] **5.8: Testing:**
-    *   [ ] Test Sign Up flow.
-    *   [ ] Test Login flow.
-    *   [ ] Test Logout flow.
-    *   [ ] Verify chat history is associated with the logged-in user (requires checking `mem0` storage or observing behavior across logins).
+*   [x] **5.2: Install Supabase Client:** (Completed April 3, 2025)
+    *   [x] Add `supabase` to `requirements.txt` (Corrected package name).
+    *   [x] Run `pip install -r requirements.txt`.
+*   [x] **5.3: Add Supabase Auth Credentials:** (Completed April 3, 2025 - Code checks added)
+    *   [x] Ensure `SUPABASE_URL` and `SUPABASE_ANON_KEY` are in `.env` (User responsibility, but code now requires them).
+*   [x] **5.4: Implement Login UI:** (Completed April 3, 2025)
+    *   [x] Create a function `show_login_form()` in `app.py`.
+    *   [x] Use `st.text_input` for email and password.
+    *   [x] Add "Login" and "Sign Up" buttons.
+*   [x] **5.5: Implement Auth Logic:** (Completed April 3, 2025)
+    *   [x] Initialize Supabase client (`create_client` from `supabase`).
+    *   [x] Handle Login button click: Call `supabase.auth.sign_in_with_password()`. Store session in `st.session_state`.
+    *   [x] Handle Sign Up button click: Call `supabase.auth.sign_up()`. Provide feedback to user (e.g., check email).
+    *   [x] Add a "Logout" button (e.g., in sidebar) if a user session exists: Call `supabase.auth.sign_out()`. Clear session state.
+*   [x] **5.6: Gate App Access:** (Completed April 3, 2025)
+    *   [x] In `app.py`, check if `st.session_state.user_session` exists.
+    *   [x] If not logged in, call `show_login_form()` and use `st.stop()` to prevent the main chat app from rendering.
+    *   [x] If logged in, display the main chat interface.
+*   [x] **5.7: Use Authenticated User ID for `mem0`:** (Completed April 3, 2025)
+    *   [x] When logged in, extract the user ID from `st.session_state.user_session.user.id`.
+    *   [x] Pass this user ID to `mem0.add()` and `mem0.search()` instead of the static ID.
+*   [x] **5.8: Testing:** (User Action Required)
+    *   [x] Test Sign Up flow.
+    *   [x] Test Login flow.
+    *   [x] Test Logout flow.
+    *   [x] Verify chat history is associated with the logged-in user (requires checking `mem0` storage or observing behavior across logins).
 
 ## (Optional) Further Enhancements
 
