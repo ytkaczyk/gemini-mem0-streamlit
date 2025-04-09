@@ -45,11 +45,11 @@ The application will provide a simple chat interface. When a user types a messag
 
 *   **Programming Language:** Python 3.x
 *   **Memory Layer:** `mem0` library (`mem0ai`)
-*   **LLM:** Google Gemini (via `mem0` integration or directly via `google-generativeai` if needed)
+*   **LLM:** Google Gemini (via `mem0` integration and directly via `google-generativeai`)
 *   **Vector Database:** Supabase (using `pgvector` extension)
 *   **Authentication:** Supabase Auth
 *   **Graph Database:** Neo4j (AuraDB free tier recommended, or local Docker instance)
-*   **Frontend Framework:** Streamlit
+*   **Frontend Framework:** Streamlit (with response streaming)
 *   **Environment Management:** `venv` or `conda`
 *   **Dependencies:** `mem0ai[supabase,neo4j,gemini]`, `streamlit`, `python-dotenv`, `supabase`, `google-generativeai` (potentially)
 

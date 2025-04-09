@@ -137,6 +137,16 @@ if not memory_client or not gemini_llm_client or not supabase:
     st.warning("One or more clients (mem0, Gemini, Supabase) could not be initialized. Please check logs and configuration.")
     st.stop() # Stop execution if clients fail to initialize
 
+# response chunker
+def chunk_response(response):
+    try:
+        for chunk in response:
+            if hasattr(chunk, 'text') and chunk.text:
+                yield chunk.text
+    except ValueError as ve:
+        logging.warning(f"App: Error in chunking response: {ve}", exc_info=True)
+        yield "" # Handle any errors in chunking gracefully
+
 # --- Authentication Logic ---
 
 # Initialize session state for user session if it doesn't exist
@@ -241,9 +251,13 @@ st.sidebar.code(config.llm_model, language=None) # Display model name read from 
 st.sidebar.markdown("Embedding model:")
 st.sidebar.code(config.embedding_model, language=None) # Display embedding model name read from config
 
-st.sidebar.divider() # Visual separator
+st.sidebar.divider()
 
 st.sidebar.subheader("💬 Conversation")
+
+# Add a toggle to show/hide memory info messages
+show_memory = st.sidebar.checkbox("Show memory information", value=False)
+
 # Reason: Allows users to easily start a fresh conversation without restarting the app.
 # Only show clear button if logged in
 if st.session_state.user_session:
@@ -312,8 +326,9 @@ if prompt := st.chat_input("Ask me anything..."):
             memories_str = "\n".join(f"- {entry['memory']}" for entry in relevant_memories.get("results", []))
             logging.info(f"App: Found relevant memories:\n{memories_str if memories_str else 'None'}") # Log found memories or None
 
-            with st.chat_message("memory info", avatar="🧠"):
-                st.markdown(f"**Relevant Memories:**\n{memories_str if memories_str else 'None'}")
+            if memories_str and show_memory:
+                with st.chat_message("memory info", avatar="🧠"):
+                    st.markdown(f"**Relevant Memories:**\n{memories_str if memories_str else 'None'}")
                 
         except IndexError as ie:
             # Reason: Specific handling for IndexError observed during mem0 search, likely due to LLM issues within mem0.
@@ -356,26 +371,34 @@ if prompt := st.chat_input("Ask me anything..."):
         gemini_response = gemini_llm_client.generate_content(
             gemini_messages,
             generation_config=generation_config,
-            safety_settings=safety_settings
+            safety_settings=safety_settings,
+            stream=True
         )
 
-        # Handle potential blocked responses from safety settings
-        # Reason: Checks if the response was blocked by safety filters before trying to access content.
-        if not gemini_response.candidates:
-             assistant_response = "My response was blocked due to safety settings. Please rephrase your query."
-             logging.warning("App: Gemini response blocked by safety settings.")
-        else:
-            # Extract text, handling potential errors if response structure is unexpected
-            # Reason: Safely extracts the text content from the Gemini response, guarding against API changes or errors.
+        # Initialize an empty string to accumulate the response
+        assistant_response = ""
+
+        # Stream the response and accumulate it
+        with st.chat_message("assistant"):
             try:
-                 assistant_response = gemini_response.text
+                assistant_response = st.write_stream(chunk_response(gemini_response))
+                #assistant_response = st.write_stream(chunk.text for chunk in gemini_response if chunk.text)
+
+                # Handle potential blocked responses from safety settings
+                # Reason: Checks if the response was blocked by safety filters before trying to access content.
+                if gemini_response.candidates and gemini_response.candidates[0].finish_reason != 1:
+                    logging.warning(f"App: Gemini response was not finished. Reason: {gemini_response.candidates[0].finish_reason}")
+                    assistant_response = "My response was blocked due to safety settings. Please rephrase your query."
+                    st.write(assistant_response)
             except ValueError as ve:
-                 # Log the full response part if text extraction fails for debugging
-                 logging.error(f"App: Error extracting text from Gemini response part: {ve}. Part: {gemini_response.candidates[0]}")
-                 assistant_response = "[Error processing LLM response]"
+                # Log the full response part if text extraction fails for debugging
+                logging.error(f"App: Error extracting text from Gemini response part: {ve}. Part: {gemini_response.candidates[0]}")
+                assistant_response = "[Error processing LLM response]"
+                st.write(assistant_response) # Show error in UI
             except Exception as exc:
-                 logging.error(f"App: Unexpected error extracting text from Gemini response: {exc}", exc_info=True)
-                 assistant_response = "[Unexpected error processing LLM response]"
+                logging.error(f"App: Unexpected error extracting text from Gemini response: {exc}", exc_info=True)
+                assistant_response = "[Unexpected error processing LLM response]"
+                st.write(assistant_response) # Show error in UI
 
         logging.info(f"App: Received response from Gemini: {assistant_response}")
 
@@ -395,21 +418,20 @@ if prompt := st.chat_input("Ask me anything..."):
                 metadata={"email": user_email} # Add email as metadata
             )
 
-            memories_chages_str = \
+            memories_changes_str = \
                 "\n".join(f"- ✔️ {entry['memory']}" for entry in memory_change_results.get("results", []) if entry.get("event", "") == "ADD") + \
                 "\n".join(f"- ❌ {entry['memory']}" for entry in memory_change_results.get("results", []) if entry.get("event", "") == "DELETE") + \
                 "\n".join(f"- ♻️ {entry['previous_memory']} ➡️ {entry['memory']}" for entry in memory_change_results.get("results", []) if entry.get("event", "") == "UPDATE")
 
-            with st.chat_message("memory info", avatar="🧠"):
-                st.markdown(f"**Updated Memories:**\n{memories_chages_str if memories_chages_str else 'None'}")
+            if memories_changes_str and show_memory:
+                with st.chat_message("memory info", avatar="🧠"):
+                    st.markdown(f"**Updated Memories:**\n{memories_changes_str if memories_changes_str else 'None'}")
 
             logging.info("App: Conversation turn added to mem0.")
 
             # Add assistant response to Streamlit history and display it
             # Reason: Updates the UI with the assistant's response.
             st.session_state.messages.append({"role": "assistant", "content": assistant_response})
-            with st.chat_message("assistant"):
-                st.markdown(assistant_response)
         else:
             # Reason: Handles cases where no valid response was generated (e.g., blocked or error).
             logging.warning("App: No valid assistant response generated or extracted.")

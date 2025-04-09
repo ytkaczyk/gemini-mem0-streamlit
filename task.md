@@ -111,7 +111,7 @@ This document outlines the initial tasks required to get the Minimum Viable Prod
 
 ## Phase 5: User Authentication (April 2, 2025)
 
-*   [ ] **5.1: Update Planning & Task Docs:**
+*   [x] **5.1: Update Planning & Task Docs:**
     *   [x] Update `PLANNING.md` scope, tech stack, considerations.
     *   [x] Add Phase 5 tasks to `TASK.md`.
 *   [x] **5.2: Install Supabase Client:** (Completed April 3, 2025)
@@ -141,9 +141,15 @@ This document outlines the initial tasks required to get the Minimum Viable Prod
     *   [x] Test Logout flow.
     *   [x] Verify chat history is associated with the logged-in user (requires checking `mem0` storage or observing behavior across logins).
 
+## Phase 6: Streaming Response (April 7, 2025)
+
+*   [x] **6.1: Implement Streaming Response:**
+    *   [x] Modify the LLM (Gemini) call to stream the response.
+    *   [x] Use `st.write_stream` to display the streaming response in the chat interface.
+    
 ## (Optional) Further Enhancements
 
 *   [ ] Explore more advanced `mem0` search/query options.
 *   [ ] Improve Streamlit UI (e.g., loading spinners).
-*   [ ] Add a button to clear memory/session state.
+*   [x] Add a button to clear memory/session state.
 *   [ ] Implement more robust error display to the user.
