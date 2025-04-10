@@ -3,7 +3,7 @@ from mem0 import Memory
 from dotenv import load_dotenv
 import logging
 import warnings
-from utils import Config, load_config, validate_variables
+from utils import Config, load_config, validate_variables, initialize_session_state_with_token, reset_conversation_state, refresh_tokens_panel, update_tokens
 import google.generativeai as genai
 from supabase import create_client, Client, AuthApiError # Added for Supabase Auth
 
@@ -27,7 +27,7 @@ load_dotenv()
 logging.info("App: Loaded environment variables.")
 config = load_config(logging)
 
-# CallValidate variables 
+# Validate required environment variables
 validate_variables(st, logging, config)
 
 # Define the mem0 configuration dictionary
@@ -147,10 +147,11 @@ def chunk_response(response):
         logging.warning(f"App: Error in chunking response: {ve}", exc_info=True)
         yield "" # Handle any errors in chunking gracefully
 
+initialize_session_state_with_token(st)
+
 # --- Authentication Logic ---
 
 # Initialize session state for user session if it doesn't exist
-# Reason: Tracks the logged-in user's session information across reruns.
 if 'user_session' not in st.session_state:
     st.session_state.user_session = None
     logging.info("App: Initialized user_session in session state.")
@@ -215,57 +216,64 @@ def show_login_form():
 
 # Sidebar Section
 # Reason: Provides users with configuration info and control options without cluttering the main chat area.
-st.sidebar.title("Gemini & mem0 Demo")
+show_memory = False # Default to not showing memory info
+tokens_panel_placeholder = None # Placeholder for token usage display
 
-# --- Authentication Display and Logout ---
-# Reason: Shows user status and provides logout functionality in the sidebar.
-st.sidebar.subheader("👤 Account")
-if st.session_state.user_session:
-    user_email = st.session_state.user_session.user.email
-    st.sidebar.markdown(f"Logged in as:")
-    st.sidebar.code(user_email, language=None)
-    if st.sidebar.button("Logout", use_container_width=True):
-        try:
-            logging.info(f"App: Logging out user: {user_email}")
-            # Reason: Calls Supabase Auth to invalidate the current session.
-            supabase.auth.sign_out()
-            st.session_state.user_session = None # Clear session state
-            st.session_state.messages = [] # Clear chat history on logout
-            logging.info("App: Logout successful.")
-            st.rerun() # Rerun to show the login form
-        except AuthApiError as e:
-            logging.error(f"App: Logout failed: {e.message}")
-            st.sidebar.error(f"Logout failed: {e.message}")
-        except Exception as e:
-            logging.error(f"App: An unexpected error occurred during logout: {e}", exc_info=True)
-            st.sidebar.error("An unexpected error during logout.")
-else:
-    st.sidebar.markdown("Status: Logged Out")
+with st.sidebar:
+    st.title("Gemini & mem0 Demo")
 
-st.sidebar.divider() # Visual separator
+    # --- Authentication Display and Logout ---
+    # Reason: Shows user status and provides logout functionality in the sidebar.
+    st.subheader("👤 Account")
+    if st.session_state.user_session:
+        user_email = st.session_state.user_session.user.email
+        st.markdown(f"Logged in as:")
+        st.code(user_email, language=None)
+        if st.button("Logout", use_container_width=True):
+            try:
+                logging.info(f"App: Logging out user: {user_email}")
+                # Reason: Calls Supabase Auth to invalidate the current session.
+                supabase.auth.sign_out()
+                st.session_state.user_session = None # Clear session state
+                reset_conversation_state(st)
+                logging.info("App: Logout successful.")
+                st.rerun() # Rerun to show the login form
+            except AuthApiError as e:
+                logging.error(f"App: Logout failed: {e.message}")
+                st.sidebar.error(f"Logout failed: {e.message}")
+            except Exception as e:
+                logging.error(f"App: An unexpected error occurred during logout: {e}", exc_info=True)
+                st.sidebar.error("An unexpected error occurred during logout.")
+    else:
+        st.markdown("Status: Logged Out")
 
-# --- Model Information ---
-st.sidebar.subheader("🤖 Model")
-st.sidebar.markdown("Gemini model:")
-st.sidebar.code(config.llm_model, language=None) # Display model name read from config
-st.sidebar.markdown("Embedding model:")
-st.sidebar.code(config.embedding_model, language=None) # Display embedding model name read from config
+    st.divider() # Visual separator
 
-st.sidebar.divider()
+    # --- Model Information ---
+    st.subheader("🤖 Model")
+    st.markdown("Gemini model:")
+    st.code(config.llm_model, language=None) # Display model name read from config
+    st.markdown("Embedding model:")
+    st.code(config.embedding_model, language=None) # Display embedding model name read from config
 
-st.sidebar.subheader("💬 Conversation")
+    st.divider()
 
-# Add a toggle to show/hide memory info messages
-show_memory = st.sidebar.checkbox("Show memory information", value=False)
+    st.subheader("💬 Conversation")
 
-# Reason: Allows users to easily start a fresh conversation without restarting the app.
-# Only show clear button if logged in
-if st.session_state.user_session:
-    if st.sidebar.button("Clear Conversation", use_container_width=True):
-        # Reason: Resets the chat message list stored in Streamlit's session state.
-        st.session_state.messages = []
-        logging.info(f"App: Conversation history cleared by user: {st.session_state.user_session.user.email}")
-        st.rerun()
+    # Add a toggle to show/hide memory info messages
+    show_memory = st.checkbox("Show memory information", value=False)
+
+    # Update Token Usage Display
+    tokens_panel_placeholder = st.empty()
+    refresh_tokens_panel(st, tokens_panel_placeholder)
+
+    # Allows users to easily start a fresh conversation without restarting the app.
+    # Only show clear button if logged in
+    if st.session_state.user_session:
+        if st.button("Clear Conversation", use_container_width=True):
+            reset_conversation_state(st)
+            logging.info(f"App: Conversation history cleared by user: {st.session_state.user_session.user.email}")
+            st.rerun()
 
 # --- Main Application Logic ---
 
@@ -382,10 +390,8 @@ if prompt := st.chat_input("Ask me anything..."):
         with st.chat_message("assistant"):
             try:
                 assistant_response = st.write_stream(chunk_response(gemini_response))
-                #assistant_response = st.write_stream(chunk.text for chunk in gemini_response if chunk.text)
 
                 # Handle potential blocked responses from safety settings
-                # Reason: Checks if the response was blocked by safety filters before trying to access content.
                 if gemini_response.candidates and gemini_response.candidates[0].finish_reason != 1:
                     logging.warning(f"App: Gemini response was not finished. Reason: {gemini_response.candidates[0].finish_reason}")
                     assistant_response = "My response was blocked due to safety settings. Please rephrase your query."
@@ -402,7 +408,12 @@ if prompt := st.chat_input("Ask me anything..."):
 
         logging.info(f"App: Received response from Gemini: {assistant_response}")
 
-        # --- Step 4: Add conversation turn to mem0 ---
+        # --- Step 4: Update token counts ---
+        update_tokens(st, gemini_response)
+        # Update Token Usage Display
+        refresh_tokens_panel(st, tokens_panel_placeholder)
+
+        # --- Step 5: Add conversation turn to mem0 ---
         # Reason: Stores the user query and the assistant's response in mem0 for future context retrieval.
         if assistant_response: # Only add if a valid response was generated
             conversation_turn = [
@@ -433,7 +444,7 @@ if prompt := st.chat_input("Ask me anything..."):
             # Reason: Updates the UI with the assistant's response.
             st.session_state.messages.append({"role": "assistant", "content": assistant_response})
         else:
-            # Reason: Handles cases where no valid response was generated (e.g., blocked or error).
+            # Reason: Handles cases where no valid response was generated or extracted.
             logging.warning("App: No valid assistant response generated or extracted.")
             st.warning("Could not get a response from the assistant.") # Inform user in UI
 

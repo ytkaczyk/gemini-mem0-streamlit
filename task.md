@@ -146,10 +146,19 @@ This document outlines the initial tasks required to get the Minimum Viable Prod
 *   [x] **6.1: Implement Streaming Response:**
     *   [x] Modify the LLM (Gemini) call to stream the response.
     *   [x] Use `st.write_stream` to display the streaming response in the chat interface.
+
+## Phase 7: Display token count (April 10, 2025)
     
+*   [x] **7.1: Implement token count display:**     
+    *   [x] Display 'Prompt token count', 'Response token count' and 'Total token count' ('Prompt token count' + 'Response token count') in the conversation section in the side panel for the current prompt.
+    *   [x] Display cumulative values for 'Prompt token count', 'Response token count' and 'Total token count' for the entire conversation.
+    *   [x] These values should be reset when the user clicks on 'Clear Conversation'.
+
+## Further Enhancements
+*   [x] Add a button to clear memory/session state.
+
 ## (Optional) Further Enhancements
 
 *   [ ] Explore more advanced `mem0` search/query options.
 *   [ ] Improve Streamlit UI (e.g., loading spinners).
-*   [x] Add a button to clear memory/session state.
 *   [ ] Implement more robust error display to the user.

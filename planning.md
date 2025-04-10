@@ -18,6 +18,7 @@ To create a functional Python demonstration showcasing the `mem0` library's capa
 *   Retrieve relevant context from `mem0` to inform Gemini's responses within the chat flow.
 *   Demonstrate basic memory persistence across multiple turns in a single chat session.
 *   Utilize environment variables for secure credential management (API Keys, DB URIs).
+*   Display 'Prompt token count' and a 'Total token count' in the conversation section in the side panel. These values can be retrieved from  'usage_metadata' object in the 'assistant_response'. These values should be reset when the user clicks on 'Clear Conversation'.
 
 **Out of Scope (Initial Version):**
 
