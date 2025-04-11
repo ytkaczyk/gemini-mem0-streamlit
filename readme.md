@@ -10,6 +10,8 @@ This project demonstrates the capabilities of the `mem0` library for AI memory m
 *   Vector memory storage via Supabase (pgvector).
 *   Graph memory storage via Neo4j.
 *   Persistence of memories within a single user session.
+*   User authentication using Supabase Auth.
+*   Display prompt, Response and Total tokens count for the current prompt and conversation.
 *   Sidebar displaying the LLM model in use and an option to clear the conversation UI.
 
 ## Setup Instructions
