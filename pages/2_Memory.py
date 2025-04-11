@@ -1,10 +1,10 @@
-import streamlit as st
-from mem0 import Memory
-from dotenv import load_dotenv
 import logging
+import pandas as pd
+import streamlit as st
 import warnings
-from utils import get_config
 from client_utils import get_clients
+from dotenv import load_dotenv
+from utils import get_config
 
 # --- Initial Setup ---
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="pydantic.v1.typing")
@@ -43,10 +43,22 @@ try:
 
     if all_memories:
         logging.info(f"Memory Page: Found {len(all_memories)} memories.")
-        # Display memories - st.dataframe might be suitable if structure is consistent
-        # st.dataframe(all_memories)
+        # Display as a table
+        df = pd.DataFrame(all_memories["results"])
+        df.set_index("id", inplace=True)  # Set 'id' as index for better readability
+        st.dataframe( \
+            df, 
+            use_container_width=True,
+            hide_index=True, 
+            column_order=["memory", "created_at", "updated_at"],
+            column_config={
+                "memory": st.column_config.TextColumn("Memory", width="large"),
+                "created_at": st.column_config.DatetimeColumn("Created At", format="MM-DD-YYYY HH:mm:ss", width="small"),
+                "updated_at": st.column_config.DatetimeColumn("Updated At", format="MM-DD-YYYY HH:mm:ss", width="small"),
+            }
+        )
         # Or display as JSON for clarity
-        st.json(all_memories, expanded=False) # Show collapsed by default
+        #st.json(all_memories, expanded=False) # Show collapsed by default
 
         # Alternatively, iterate and display nicely
         # st.subheader("Stored Memory Records:")

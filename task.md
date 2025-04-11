@@ -207,8 +207,8 @@ This document outlines the initial tasks required to get the Minimum Viable Prod
             show_login_form() # Show login if not authenticated
         ```
     *   [x] Move the sidebar elements (logout button, potentially token counts if they become global/summary) to be defined within the `if st.session_state.user_session:` block in `app.py` so they appear consistently across pages.
-*   [ ] **8.6: Display tabular memories
-    *   [ ] Display the retrieved memories using `st.write`, `st.dataframe`, or `st.json`. Handle the case where no memories are found.
+*   [x] **8.6: Display tabular memories
+    *   [x] Display the retrieved memories using `st.dataframe`. Handle the case where no memories are found.
 *   [ ] **8.7: Display graph memories
     *   [ ] Add 'graph' tabs
     *   [ ] Display graph 
