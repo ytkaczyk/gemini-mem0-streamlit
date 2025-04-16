@@ -162,3 +162,62 @@ This document outlines the initial tasks required to get the Minimum Viable Prod
 *   [ ] Explore more advanced `mem0` search/query options.
 *   [ ] Improve Streamlit UI (e.g., loading spinners).
 *   [ ] Implement more robust error display to the user.
+
+
+## Phase 8: Display Memories (April 11, 2025)
+
+*   [x] **8.1: Update Planning & Task Docs:**
+    *   [x] Update `PLANNING.md` scope, architecture. (Completed)
+    *   [x] Add Phase 8 tasks to `TASK.md`. (Completed)
+*   [x] **8.2: Create `pages` Directory:** (Completed April 11, 2025)
+    *   [x] Create a directory named `pages` in the project root.
+*   [x] **8.3: Create `pages/1_Chat.py`:** (Completed April 11, 2025)
+    *   [x] Create the file `pages/1_Chat.py`.
+    *   [x] Move the core chat interface logic (UI elements, message handling, `mem0` interaction, token display) from `app.py` to this file.
+    *   [x] Adapt imports and ensure necessary initializations (e.g., `mem0` client, potentially Supabase client if needed locally) are present or correctly accessed from session state/global scope.
+    *   [x] Verify that session state variables (`messages`, `user_session`, token counts) are accessed correctly within the page context.
+    *   [x] Ensure the authentication check (is user logged in?) is performed at the beginning of this page's logic.
+*   [x] **8.4: Create `pages/2_Memory.py`:** (Completed April 11, 2025)
+    *   [x] Create the file `pages/2_Memory.py`.
+    *   [x] Add necessary imports (`streamlit`, `mem0`, `os`, `load_dotenv`, `supabase`).
+    *   [x] Add logic to initialize the `mem0` client (consider sharing via a utility function or session state if feasible).
+    *   [x] Implement the authentication check (is user logged in?). If not, display a message and stop.
+    *   [x] If logged in, retrieve the `user_id` from `st.session_state.user_session`.
+    *   [x] Use `memory_client.get_all(user_id=user_id)` to fetch all memories for the user. (Note: Check `mem0` documentation for the exact method, especially if using async).
+    *   [x] Add a title like "Your Memories".
+*   [x] **8.5: Refactor `app.py` (Main Entry Point):** (Completed April 11, 2025)
+    *   [x] Remove the chat-specific UI and logic.
+    *   [x] Keep essential global setup: `st.set_page_config`, `load_dotenv`.
+    *   [x] Keep/Refine the Supabase client initialization and the login/logout form logic (`show_login_form`, auth handling). This should likely remain in `app.py` to gate access before page navigation.
+    *   [x] Ensure the login check (`if 'user_session' not in st.session_state...`) happens *before* attempting to render any page content or navigation.
+    *   [x] Define the pages using `st.Page`:
+        ```python
+        # Example structure in app.py after auth check
+        if st.session_state.user_session:
+            pg = st.navigation(
+                [
+                    st.Page("pages/1_Chat.py", title="Chat", icon=":speech_balloon:"),
+                    st.Page("pages/2_Memory.py", title="Memory", icon=":brain:"),
+                ]
+            )
+            # Add logout button logic here (e.g., in sidebar)
+            # ... sidebar logout button ...
+            pg.run() # Render the selected page
+        else:
+            show_login_form() # Show login if not authenticated
+        ```
+    *   [x] Move the sidebar elements (logout button, potentially token counts if they become global/summary) to be defined within the `if st.session_state.user_session:` block in `app.py` so they appear consistently across pages.
+*   [x] **8.6: Display tabular memories
+    *   [x] Display the retrieved memories using `st.dataframe`. Handle the case where no memories are found.
+*   [ ] **8.7: Display graph memories
+    *   [ ] Add 'graph' tabs
+    *   [ ] Display graph 
+*   [ ] **8.8: Testing:** (User Action Required)
+    *   [ ] Run `streamlit run app.py`.
+    *   [ ] Test logging in and out.
+    *   [ ] Test navigating between the "Chat" and "Memory" pages using the sidebar.
+    *   [ ] Verify chat functionality works as before on the "Chat" page.
+    *   [ ] Verify memories are displayed correctly on the "Memory" page for the logged-in user.
+    *   [ ] Test adding new memories in chat and seeing them appear on the "Memory" page after refresh/navigation.
+    *   [ ] Ensure session state (chat history, token counts) persists correctly when switching pages.
+    *   [ ] Confirm logout works from any page and returns to the login screen.

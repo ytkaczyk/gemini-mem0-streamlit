@@ -23,7 +23,7 @@ class Config:
         self.supabase_anon_key = os.getenv("SUPABASE_ANON_KEY")  # Added for Supabase Auth
 
 @st.cache_resource
-def load_config(logging):
+def get_config(_logging) -> Config:
     """
     Loads the configuration from environment variables and returns a Config object.
     Config variables are cached as resources to improve performance.
@@ -31,8 +31,10 @@ def load_config(logging):
     Returns:
         Config: An instance of the Config class containing the loaded configuration.
     """
-    logging.info("Loading configuration from environment variables.")
+    _logging.info("Loading configuration from environment variables.")
     config = Config()
+
+    validate_variables(st, _logging, config)
     return config
 
 def validate_variables(st, logging, config):
@@ -101,15 +103,16 @@ def refresh_tokens_panel(st, tokens_panel):
     Refreshes the token usage display in the sidebar.
     """
     with tokens_panel.container():
-        with st.expander("Tokens", expanded=True):
-            total_col1, total_col2, total_col3 = st.columns(3)
-            with total_col2:
-                st.metric(label="**Total**", value = st.session_state.cumulative_total_tokens, delta= st.session_state.total_tokens)
-            details_col1, details_col2 = st.columns(2)
-            with details_col1:
-                st.metric(label="Prompt", value = st.session_state.cumulative_prompt_tokens, delta= st.session_state.prompt_tokens, border = True)
-            with details_col2:
-                st.metric(label="Response", value = st.session_state.cumulative_response_tokens, delta= st.session_state.response_tokens, border = True)
+        st.markdown("**Token usage**")
+        #with st.expander("Tokens", expanded=True):
+        total_col1, total_col2, total_col3 = st.columns(3)
+        with total_col2:
+            st.metric(label="**Total**", value = st.session_state.cumulative_total_tokens, delta= st.session_state.total_tokens)
+        details_col1, details_col2 = st.columns(2)
+        with details_col1:
+            st.metric(label="Prompt", value = st.session_state.cumulative_prompt_tokens, delta= st.session_state.prompt_tokens, border = True)
+        with details_col2:
+            st.metric(label="Response", value = st.session_state.cumulative_response_tokens, delta= st.session_state.response_tokens, border = True)
 
 def update_tokens(st, response):
     """

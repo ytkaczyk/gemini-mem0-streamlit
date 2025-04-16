@@ -19,6 +19,10 @@ To create a functional Python demonstration showcasing the `mem0` library's capa
 *   Demonstrate basic memory persistence across multiple turns in a single chat session.
 *   Utilize environment variables for secure credential management (API Keys, DB URIs).
 *   Display 'Prompt token count' and a 'Total token count' in the conversation section in the side panel. These values can be retrieved from  'usage_metadata' object in the 'assistant_response'. These values should be reset when the user clicks on 'Clear Conversation'.
+*   **Refactor into a multi-page application:**
+    *   Separate 'Chat' functionality into its own page.
+    *   Create a 'Memory' page to display all stored memories for the logged-in user.
+*   Utilize Streamlit's `st.Page` and `st.navigation` for multi-page structure.
 
 **Out of Scope (Initial Version):**
 
@@ -73,6 +77,11 @@ The application will provide a simple chat interface. When a user types a messag
   +--------+      +------------+      +-----------+
 
 ```
+
+*   **Multi-page Structure (Phase 8):** The application will be refactored using Streamlit's native multi-page app features (`st.Page`, `st.navigation`).
+    *   `app.py`: Will act as the main entry point, primarily setting up navigation.
+    *   `pages/1_Chat.py`: Contains the original chat interface logic.
+    *   `pages/2_Memory.py`: Contains the logic to fetch and display all memories for the current user.
 
 
 *   **Streamlit UI:** Captures user input, displays conversation history. Manages session state.

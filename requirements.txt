@@ -39,6 +39,8 @@ Jinja2==3.1.6
 jiter==0.9.0
 jsonschema==4.23.0
 jsonschema-specifications==2024.10.1
+langchain
+langchain-neo4j
 MarkupSafe==3.0.2
 mem0ai==0.1.81
 monotonic==1.6
@@ -65,6 +67,8 @@ python-dotenv==1.1.0
 pytz==2024.2
 pywin32==310
 qdrant-client==1.13.3
+rank-bm25
+rdflib
 referencing==0.36.2
 requests==2.32.3
 rpds-py==0.24.0
@@ -75,6 +79,7 @@ smmap==5.0.2
 sniffio==1.3.1
 SQLAlchemy==2.0.40
 streamlit==1.44.1
+streamlit_agraph
 tenacity==9.0.0
 toml==0.10.2
 tornado==6.4.2
@@ -84,5 +89,6 @@ typing_extensions==4.13.0
 tzdata==2025.2
 uritemplate==4.1.1
 urllib3==2.3.0
+vecs
 watchdog==6.0.0
 supabase>=2.0.0,<3.0.0 # Corrected package name for Phase 5 Auth
