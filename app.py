@@ -26,10 +26,10 @@ load_dotenv()
 logging.info("App: Loaded environment variables.")
 config = get_config(logging)
 
-memory_client, gemini_llm_client, supabase = get_clients(config)
+# Load the clients (cached resources)
+memory_client, gemini_llm_client, supabase_client = get_clients(config)
 
-
-if not memory_client or not gemini_llm_client or not supabase:
+if not memory_client or not gemini_llm_client or not supabase_client:
     st.warning("One or more clients (mem0, Gemini, Supabase) could not be initialized. Please check logs and configuration.")
     st.stop() # Stop execution if clients fail to initialize
     
@@ -65,7 +65,7 @@ def show_login_form():
                 try:
                     logging.info(f"App: Attempting login for user: {email}")
                     # Call Supabase Auth to sign the user in.
-                    session = supabase.auth.sign_in_with_password({"email": email, "password": password})
+                    session = supabase_client.auth.sign_in_with_password({"email": email, "password": password})
                     st.session_state.user_session = session # Store session info
                     logging.info(f"App: Login successful for user: {email}")
                     st.success("Login successful!")
@@ -84,7 +84,7 @@ def show_login_form():
                 try:
                     logging.info(f"App: Attempting signup for user: {email}")
                     # Reason: Calls Supabase Auth to sign the user up.
-                    session = supabase.auth.sign_up({"email": email, "password": password})
+                    session = supabase_client.auth.sign_up({"email": email, "password": password})
                     # Note: Supabase often requires email confirmation by default.
                     # The session returned here might not be fully active until confirmation.
                     # st.session_state.user_session = session # Optionally log in immediately, or wait for confirmation
@@ -113,7 +113,6 @@ else:
         [
             st.Page("pages/1_Chat.py", title="Chat", default=True),
             st.Page("pages/2_Memory.py", title="Memory"),
-            # Add more pages here if needed
         ]
     )
 
@@ -127,7 +126,7 @@ else:
         if st.button("Logout", icon=":material/logout:", use_container_width=True):
             try:
                 logging.info(f"App: Logging out user: {user_email}")
-                supabase.auth.sign_out()
+                supabase_client.auth.sign_out()
                 st.session_state.user_session = None # Clear session state
                 reset_conversation_state(st) # Clear chat history and tokens
                 logging.info("App: Logout successful.")
@@ -140,7 +139,7 @@ else:
                 st.sidebar.error("An unexpected error occurred during logout.")
 
         # --- Model Information ---
-        with st.expander("🤖 Models", expanded=True):
+        with st.expander("🤖 Models", expanded=False):
             st.markdown("LLM model:")
             st.code(config.llm_model, language=None)
             st.markdown("Embedding model:")

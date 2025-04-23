@@ -53,9 +53,6 @@ class Node:
 
   def __hash__(self) -> int:
     return hash(self.id)
-  
-  from streamlit_agraph.node import Node
-from streamlit_agraph.edge import Edge
 
 class Triple:
   def __init__(self, subj: Node, pred: Edge, obj:Node ) -> None:
