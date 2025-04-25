@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import logging
 import warnings
 from utils import get_config, initialize_session_state_with_token, reset_conversation_state
-from client_utils import get_clients
+from client_utils import get_supabase_client
 from supabase import AuthApiError
 
 # --- Initial Setup ---
@@ -27,10 +27,10 @@ logging.info("App: Loaded environment variables.")
 config = get_config(logging)
 
 # Load the clients (cached resources)
-memory_client, gemini_llm_client, supabase_client = get_clients(config)
+supabase_client = get_supabase_client(config)
 
-if not memory_client or not gemini_llm_client or not supabase_client:
-    st.warning("One or more clients (mem0, Gemini, Supabase) could not be initialized. Please check logs and configuration.")
+if not supabase_client:
+    st.warning("Supabase client could not be initialized. Please check logs and configuration.")
     st.stop() # Stop execution if clients fail to initialize
     
 initialize_session_state_with_token(st)
@@ -42,12 +42,11 @@ if 'user_session' not in st.session_state:
     st.session_state.user_session = None
     logging.info("App: Initialized user_session in session state.")
 
+@st.fragment
 def show_login_form():
     """
     Displays the login/signup form and handles authentication logic.
     """
-    st.title("Login / Sign Up")
-    st.caption("Please log in or sign up to use the chat.")
 
     with st.form("login_form"):
         email = st.text_input("Email")
@@ -100,6 +99,14 @@ def show_login_form():
 
 # --- Main Application Logic ---
 
+# Define the pages for navigation
+pg = st.navigation(
+    [
+        st.Page("pages/1_Chat.py", title="Chat", default=True),
+        st.Page("pages/2_Memory.py", title="Memory"),
+    ]
+)
+
 # Gate access based on login status
 # Reason: Ensures only authenticated users can access the chat functionality.
 if 'user_session' not in st.session_state or st.session_state.user_session is None:
@@ -107,14 +114,6 @@ if 'user_session' not in st.session_state or st.session_state.user_session is No
 else:
     # --- Logged-in User Experience ---
     # This section runs only if the user is logged in.
-
-    # Define the pages for navigation
-    pg = st.navigation(
-        [
-            st.Page("pages/1_Chat.py", title="Chat", default=True),
-            st.Page("pages/2_Memory.py", title="Memory"),
-        ]
-    )
 
     # --- Sidebar Setup (Global for Logged-in Users) ---
     with st.sidebar:

@@ -55,13 +55,13 @@ def build_mem0_config(config: Config) -> dict:
 # Cache the clients using st.cache_resource to avoid re-initializing on every script rerun (e.g., user interaction).
 # Reason: Improves performance and avoids unnecessary setup/connection overhead.
 @st.cache_resource
-def get_clients(_config):
+def get_ai_clients(_config):
     """
-    Initializes and returns the mem0, Gemini, and Supabase clients based on the configuration.
+    Initializes and returns the mem0, Gemini clients based on the configuration.
     Uses st.cache_resource to ensure clients are created only once per session.
 
     Returns:
-        tuple: A tuple containing the initialized mem0, Gemini, and Supabase clients,
+        tuple: A tuple containing the initialized mem0, Gemini clients,
                or (None, None, None) if initialization fails for any.
     """
     mem_client = None
@@ -99,6 +99,23 @@ def get_clients(_config):
         logging.error(f"App: Failed to initialize Gemini client: {e}", exc_info=True)
         st.error(f"Failed to initialize Gemini client: {e}")
 
+    return mem_client, gemini_client
+
+# --- Client Initialization ---
+# Cache the clients using st.cache_resource to avoid re-initializing on every script rerun (e.g., user interaction).
+# Reason: Improves performance and avoids unnecessary setup/connection overhead.
+@st.cache_resource
+def get_supabase_client(_config):
+    """
+    Initializes and returns the Supabase client based on the configuration.
+    Uses st.cache_resource to ensure clients are created only once per session.
+
+    Returns:
+        tuple: The initialized mem0, Gemini, and Supabase clients,
+               or None if initialization fails.
+    """
+    supabase_client: Client | None = None
+
     # Initialize Supabase client (for Auth)
     logging.info("App: Initializing Supabase client...")
     try:
@@ -114,4 +131,4 @@ def get_clients(_config):
         logging.error(f"App: Failed to initialize Supabase client: {e}", exc_info=True)
         st.error(f"Failed to initialize Supabase client: {e}")
 
-    return mem_client, gemini_client, supabase_client
+    return supabase_client

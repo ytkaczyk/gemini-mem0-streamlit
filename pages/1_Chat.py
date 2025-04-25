@@ -1,4 +1,4 @@
-from client_utils import get_clients
+from client_utils import get_ai_clients
 from dotenv import load_dotenv
 import google.generativeai as genai
 import logging
@@ -18,8 +18,14 @@ warnings.filterwarnings("ignore", category=DeprecationWarning, module="pydantic.
 # Configure logging (optional, could inherit from app.py if run together, but good practice for standalone page logic)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+# --- Chat Page UI Setup ---
+
+st.title("🤖💬 Chat")
+st.caption(f"Using mem0 with Gemini, Supabase, and Neo4j.")
+
 def store_value(key):
     st.session_state[key] = st.session_state["_"+key]
+
 def load_value(key, default=None):
     if key not in st.session_state:
         st.session_state[key] = default
@@ -31,7 +37,12 @@ load_dotenv()
 logging.info("Chat Page: Loaded environment variables.")
 config = get_config(logging)
 
-memory_client, gemini_llm_client, supabase_client = get_clients(config)
+# Load the clients (cached resources)
+memory_client, gemini_llm_client = get_ai_clients(config)
+
+if not memory_client or not gemini_llm_client:
+    st.warning("One or more clients (mem0, Gemini) could not be initialized. Please check logs and configuration.")
+    st.stop() # Stop execution if clients fail to initialize
 
 # --- Authentication Check ---
 # Ensure user is logged in before proceeding. Session state is shared across pages.
@@ -41,17 +52,12 @@ if 'user_session' not in st.session_state or st.session_state.user_session is No
     st.stop()
 
 # Stop if clients failed to initialize
-if not memory_client or not gemini_llm_client or not supabase_client:
+if not memory_client or not gemini_llm_client:
     st.warning("One or more clients (mem0, Gemini, Supabase) could not be initialized for the chat page. Please check logs and configuration.")
     st.stop()
 
 # Initialize session state for chat-specific things if they don't exist
 initialize_session_state_with_token(st) # Ensures token counts are initialized
-
-# --- Chat Page UI Setup ---
-
-st.title("🤖💬 Chat")
-st.caption(f"Using mem0 with Gemini, Supabase, and Neo4j.") # Removed user email as it's shown in sidebar (app.py)
 
 # Sidebar Section (Chat Page Specific)
 show_memory = False # Default to not showing memory info
@@ -69,7 +75,7 @@ with st.sidebar:
 
         # Add a toggle to show/hide memory info messages
         load_value("show_memory", default=False)
-        show_memory = st.checkbox("Show memory information", key="_show_memory", on_change=store_value, args=["show_memory"])
+        show_memory = st.toggle("Show memory information", key="_show_memory", on_change=store_value, args=["show_memory"])
 
         # Token display placeholder - content will be updated by refresh_tokens_panel
         tokens_panel_placeholder = st.empty()
