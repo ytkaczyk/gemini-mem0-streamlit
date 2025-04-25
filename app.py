@@ -48,6 +48,9 @@ def show_login_form():
     Displays the login/signup form and handles authentication logic.
     """
 
+    st.title("Login / Sign Up")
+    st.caption("Please log in to access the chat functionality.")
+
     with st.form("login_form"):
         email = st.text_input("Email")
         password = st.text_input("Password", type="password")
@@ -102,8 +105,8 @@ def show_login_form():
 # Define the pages for navigation
 pg = st.navigation(
     [
-        st.Page("pages/1_Chat.py", title="Chat", default=True),
-        st.Page("pages/2_Memory.py", title="Memory"),
+        st.Page("page_Chat.py", title="Chat", default=True),
+        st.Page("page_Memory.py", title="Memory"),
     ]
 )
 
