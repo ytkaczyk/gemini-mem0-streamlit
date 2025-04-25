@@ -2,12 +2,12 @@ import logging
 import pandas as pd
 import streamlit as st
 import warnings
-from client_utils import get_clients
+from client_utils import get_ai_clients
 from dotenv import load_dotenv
-from utils import get_config
 from streamlit_agraph import agraph
-from streamlit_graph.config import Config as GraphConfig, ConfigBuilder
+from streamlit_graph.config import Config as GraphConfig
 from streamlit_graph.triple_store import TripleStore, Node, Edge
+from utils import get_config
 
 # --- Initial Setup ---
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="pydantic.v1.typing")
@@ -18,7 +18,12 @@ load_dotenv()
 logging.info("Memory Page: Loaded environment variables.")
 config = get_config(logging)
 
-memory_client, gemini_llm_client, supabase = get_clients(config)
+# Load the clients (cached resources)
+memory_client, gemini_llm_client = get_ai_clients(config)
+
+if not memory_client or not gemini_llm_client:
+    st.warning("One or more clients (mem0, Gemini) could not be initialized. Please check logs and configuration.")
+    st.stop() # Stop execution if clients fail to initialize
 
 # --- Authentication Check ---
 if 'user_session' not in st.session_state or st.session_state.user_session is None:

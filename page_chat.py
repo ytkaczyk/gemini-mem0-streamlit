@@ -1,12 +1,16 @@
-import streamlit as st
-from mem0 import Memory
+from client_utils import get_ai_clients
 from dotenv import load_dotenv
+import google.generativeai as genai
 import logging
 import warnings
-from utils import Config, get_config, validate_variables, initialize_session_state_with_token, reset_conversation_state, refresh_tokens_panel, update_tokens
-from client_utils import get_clients
-import google.generativeai as genai
-from supabase import create_client, Client, AuthApiError
+from utils import (
+    get_config,
+    initialize_session_state_with_token,
+    refresh_tokens_panel,
+    reset_conversation_state,
+    update_tokens,
+)
+import streamlit as st
 
 # Suppress specific DeprecationWarning from pydantic v1 typing
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="pydantic.v1.typing")
@@ -14,8 +18,14 @@ warnings.filterwarnings("ignore", category=DeprecationWarning, module="pydantic.
 # Configure logging (optional, could inherit from app.py if run together, but good practice for standalone page logic)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+# --- Chat Page UI Setup ---
+
+st.title("🤖💬 Chat")
+st.caption(f"Using mem0 with Gemini, Supabase, and Neo4j.")
+
 def store_value(key):
     st.session_state[key] = st.session_state["_"+key]
+
 def load_value(key, default=None):
     if key not in st.session_state:
         st.session_state[key] = default
@@ -27,7 +37,12 @@ load_dotenv()
 logging.info("Chat Page: Loaded environment variables.")
 config = get_config(logging)
 
-memory_client, gemini_llm_client, supabase = get_clients(config)
+# Load the clients (cached resources)
+memory_client, gemini_llm_client = get_ai_clients(config)
+
+if not memory_client or not gemini_llm_client:
+    st.warning("One or more clients (mem0, Gemini) could not be initialized. Please check logs and configuration.")
+    st.stop() # Stop execution if clients fail to initialize
 
 # --- Authentication Check ---
 # Ensure user is logged in before proceeding. Session state is shared across pages.
@@ -37,17 +52,12 @@ if 'user_session' not in st.session_state or st.session_state.user_session is No
     st.stop()
 
 # Stop if clients failed to initialize
-if not memory_client or not gemini_llm_client or not supabase:
+if not memory_client or not gemini_llm_client:
     st.warning("One or more clients (mem0, Gemini, Supabase) could not be initialized for the chat page. Please check logs and configuration.")
     st.stop()
 
 # Initialize session state for chat-specific things if they don't exist
 initialize_session_state_with_token(st) # Ensures token counts are initialized
-
-# --- Chat Page UI Setup ---
-
-st.title("🤖💬 Chat")
-st.caption(f"Using mem0 with Gemini, Supabase, and Neo4j.") # Removed user email as it's shown in sidebar (app.py)
 
 # Sidebar Section (Chat Page Specific)
 show_memory = False # Default to not showing memory info
@@ -65,7 +75,7 @@ with st.sidebar:
 
         # Add a toggle to show/hide memory info messages
         load_value("show_memory", default=False)
-        show_memory = st.checkbox("Show memory information", key="_show_memory", on_change=store_value, args=["show_memory"])
+        show_memory = st.toggle("Show memory information", key="_show_memory", on_change=store_value, args=["show_memory"])
 
         # Token display placeholder - content will be updated by refresh_tokens_panel
         tokens_panel_placeholder = st.empty()
@@ -134,16 +144,14 @@ if prompt := st.chat_input("Ask me anything..."):
         system_prompt = (
             "You are a helpful AI assistant. Answer the user's query based on the query and the following potentially relevant past memories. "
             "If the memories are not relevant, answer the query directly. Do not answer with memories that are not relevant to the query.\n\n"
-            f"Relevant Memories:\n{memories_str if memories_str else 'None'}"
+            f"Relevant User Memories:\n{memories_str if memories_str else 'None'}"
         )
         gemini_messages = []
-        gemini_messages.append({'role': 'user', 'parts': [system_prompt]})
+        gemini_messages.append({'role': 'system', 'parts': [system_prompt]})
         # Include previous conversation turns (ensure roles are 'user'/'model' for Gemini)
         for msg in st.session_state.messages:
             role = "model" if msg["role"] == "assistant" else "user"
             gemini_messages.append({'role': role, 'parts': [msg['content']]})
-        # Add the current user prompt (already added to st.session_state.messages, so included above)
-        # gemini_messages.append({'role': 'user', 'parts': [prompt]}) # Redundant if already in loop
 
         # --- Step 3: Call Gemini LLM ---
         logging.info("Chat Page: Calling Gemini API...")
@@ -168,14 +176,6 @@ if prompt := st.chat_input("Ask me anything..."):
                 # Use the chunk_response helper function
                 assistant_response = st.write_stream(chunk_response(gemini_response))
 
-                # Check finish reason after streaming completes (if possible with write_stream)
-                # Note: Accessing candidates might be tricky after streaming. This check might need adjustment.
-                # if gemini_response.candidates and gemini_response.candidates[0].finish_reason != 1:
-                #     logging.warning(f"Chat Page: Gemini response was not finished. Reason: {gemini_response.candidates[0].finish_reason}")
-                #     # If response was already partially streamed, this message might appear after.
-                #     assistant_response = assistant_response + "\n\n[My response may have been cut short due to safety settings.]"
-                #     st.write("[My response may have been cut short due to safety settings.]")
-
             except Exception as exc:
                 logging.error(f"Chat Page: Unexpected error during response streaming or processing: {exc}", exc_info=True)
                 assistant_response = "[Unexpected error processing LLM response]"
@@ -184,20 +184,16 @@ if prompt := st.chat_input("Ask me anything..."):
         logging.info(f"Chat Page: Received response from Gemini: {assistant_response}")
 
         # --- Step 4: Update token counts ---
-        # Need the full response object for usage metadata, which might be consumed by write_stream.
-        # This part might need adjustment depending on how write_stream handles the final object.
-        # Assuming gemini_response still holds metadata after streaming (might not be true).
-        # If not, we might need to accumulate usage data differently or skip precise counts here.
         try:
             # Attempt to update tokens - may fail if metadata isn't available post-stream
             update_tokens(st, gemini_response)
             # Update Token Usage Display in the sidebar
             refresh_tokens_panel(st, tokens_panel_placeholder)
+
         except Exception as token_exc:
              logging.warning(f"Chat Page: Could not update token counts after streaming: {token_exc}", exc_info=True)
              # Optionally display a message in the panel if update fails
              tokens_panel_placeholder.warning("Token counts may be inaccurate for the last message.")
-
 
         # --- Step 5: Add conversation turn to mem0 ---
         if assistant_response and assistant_response.strip() and not assistant_response.startswith("[Error"):
@@ -228,12 +224,10 @@ if prompt := st.chat_input("Ask me anything..."):
                 logging.error(f"Chat Page: Failed to add conversation turn to mem0: {mem_add_err}", exc_info=True)
                 st.error(f"Failed to save conversation memory: {mem_add_err}")
 
-
             # Add assistant response to Streamlit history
             st.session_state.messages.append({"role": "assistant", "content": assistant_response})
         else:
             logging.warning("Chat Page: No valid assistant response generated or extracted to add to history/memory.")
-            # Don't add empty/error messages to history unless desired
 
     except Exception as e:
         error_message = f"An error occurred during chat processing: {e}"
@@ -245,5 +239,5 @@ if prompt := st.chat_input("Ask me anything..."):
             st.error(f"Error: {e}")
 
     logging.info("Chat Page: Finished processing prompt.")
-    # Rerun might not be needed here as elements update reactively
-    # st.rerun()
+
+

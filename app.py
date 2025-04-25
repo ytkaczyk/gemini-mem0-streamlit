@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import logging
 import warnings
 from utils import get_config, initialize_session_state_with_token, reset_conversation_state
-from client_utils import get_clients
+from client_utils import get_supabase_client
 from supabase import AuthApiError
 
 # --- Initial Setup ---
@@ -26,11 +26,11 @@ load_dotenv()
 logging.info("App: Loaded environment variables.")
 config = get_config(logging)
 
-memory_client, gemini_llm_client, supabase = get_clients(config)
+# Load the clients (cached resources)
+supabase_client = get_supabase_client(config)
 
-
-if not memory_client or not gemini_llm_client or not supabase:
-    st.warning("One or more clients (mem0, Gemini, Supabase) could not be initialized. Please check logs and configuration.")
+if not supabase_client:
+    st.warning("Supabase client could not be initialized. Please check logs and configuration.")
     st.stop() # Stop execution if clients fail to initialize
     
 initialize_session_state_with_token(st)
@@ -42,12 +42,14 @@ if 'user_session' not in st.session_state:
     st.session_state.user_session = None
     logging.info("App: Initialized user_session in session state.")
 
+@st.fragment
 def show_login_form():
     """
     Displays the login/signup form and handles authentication logic.
     """
+
     st.title("Login / Sign Up")
-    st.caption("Please log in or sign up to use the chat.")
+    st.caption("Please log in to access the chat functionality.")
 
     with st.form("login_form"):
         email = st.text_input("Email")
@@ -65,7 +67,7 @@ def show_login_form():
                 try:
                     logging.info(f"App: Attempting login for user: {email}")
                     # Call Supabase Auth to sign the user in.
-                    session = supabase.auth.sign_in_with_password({"email": email, "password": password})
+                    session = supabase_client.auth.sign_in_with_password({"email": email, "password": password})
                     st.session_state.user_session = session # Store session info
                     logging.info(f"App: Login successful for user: {email}")
                     st.success("Login successful!")
@@ -84,7 +86,7 @@ def show_login_form():
                 try:
                     logging.info(f"App: Attempting signup for user: {email}")
                     # Reason: Calls Supabase Auth to sign the user up.
-                    session = supabase.auth.sign_up({"email": email, "password": password})
+                    session = supabase_client.auth.sign_up({"email": email, "password": password})
                     # Note: Supabase often requires email confirmation by default.
                     # The session returned here might not be fully active until confirmation.
                     # st.session_state.user_session = session # Optionally log in immediately, or wait for confirmation
@@ -100,6 +102,14 @@ def show_login_form():
 
 # --- Main Application Logic ---
 
+# Define the pages for navigation
+pg = st.navigation(
+    [
+        st.Page("page_Chat.py", title="Chat", default=True),
+        st.Page("page_Memory.py", title="Memory"),
+    ]
+)
+
 # Gate access based on login status
 # Reason: Ensures only authenticated users can access the chat functionality.
 if 'user_session' not in st.session_state or st.session_state.user_session is None:
@@ -107,15 +117,6 @@ if 'user_session' not in st.session_state or st.session_state.user_session is No
 else:
     # --- Logged-in User Experience ---
     # This section runs only if the user is logged in.
-
-    # Define the pages for navigation
-    pg = st.navigation(
-        [
-            st.Page("pages/1_Chat.py", title="Chat", default=True),
-            st.Page("pages/2_Memory.py", title="Memory"),
-            # Add more pages here if needed
-        ]
-    )
 
     # --- Sidebar Setup (Global for Logged-in Users) ---
     with st.sidebar:
@@ -127,7 +128,7 @@ else:
         if st.button("Logout", icon=":material/logout:", use_container_width=True):
             try:
                 logging.info(f"App: Logging out user: {user_email}")
-                supabase.auth.sign_out()
+                supabase_client.auth.sign_out()
                 st.session_state.user_session = None # Clear session state
                 reset_conversation_state(st) # Clear chat history and tokens
                 logging.info("App: Logout successful.")
@@ -140,7 +141,7 @@ else:
                 st.sidebar.error("An unexpected error occurred during logout.")
 
         # --- Model Information ---
-        with st.expander("🤖 Models", expanded=True):
+        with st.expander("🤖 Models", expanded=False):
             st.markdown("LLM model:")
             st.code(config.llm_model, language=None)
             st.markdown("Embedding model:")
