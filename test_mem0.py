@@ -17,27 +17,26 @@ logging.info("Loaded environment variables.")
 # --- Configuration ---
 # Retrieve credentials from environment variables
 google_api_key = os.getenv("GOOGLE_API_KEY")
-supabase_url = os.getenv("SUPABASE_URL") # Keep for history manager construction
-supabase_service_key = os.getenv("SUPABASE_SERVICE_KEY") # Keep for history manager construction
-supabase_connection_string = os.getenv("SUPABASE_CONNECTION_STRING") # For vector store
-supabase_table_name = os.getenv("SUPABASE_TABLE_NAME", "documents") # Default collection name
-neo4j_url = os.getenv("NEO4J_URI") # Reads NEO4J_URI, but mem0 config expects 'url'
+supabase_connection_string = os.getenv("SUPABASE_CONNECTION_STRING")
+supabase_table_name = os.getenv("SUPABASE_TABLE_NAME", "documents")  # Default table name if not specified
+neo4j_url = os.getenv("NEO4J_URI")
 neo4j_username = os.getenv("NEO4J_USERNAME")
 neo4j_password = os.getenv("NEO4J_PASSWORD")
-embedding_model = os.getenv("EMBEDDING_MODEL", "models/text-embedding-004") # Default embedding
-embedding_model_dims = int(os.getenv("EMBEDDING_MODEL_DIMS", "768")) # Default embedding dims for Gemini - FIXED COMMA
-llm_model = os.getenv("LLM_MODEL", "gemini-1.5-flash-latest") # Default LLM
+embedding_model = os.getenv("EMBEDDING_MODEL", "models/text-embedding-004")  # Default embedding model
+embedding_model_dims = int(os.getenv("EMBEDDING_MODEL_DIMS", "768"))  # Default dimensions, ensure integer type
+llm_model = os.getenv("LLM_MODEL", "gemini-1.5-flash-latest")  # Default LLM model
+supabase_url = os.getenv("SUPABASE_URL")  # Added for Supabase Auth
+supabase_anon_key = os.getenv("SUPABASE_ANON_KEY")  # Added for Supabase Auth
 
 # Validate that essential variables are loaded
 essential_vars = {
     "GOOGLE_API_KEY": google_api_key,
     "SUPABASE_CONNECTION_STRING": supabase_connection_string, # Check connection string
+    "SUPABASE_URL": supabase_url, # For Supabase Auth client
+    "SUPABASE_ANON_KEY": supabase_anon_key, # For Supabase Auth client    
     "NEO4J_URI": neo4j_url, # Check Neo4j URL (read from NEO4J_URI env var)
     "NEO4J_USERNAME": neo4j_username,
     "NEO4J_PASSWORD": neo4j_password,
-    # Supabase URL/Key are needed for history manager construction, check them too
-    "SUPABASE_URL": supabase_url,
-    "SUPABASE_SERVICE_KEY": supabase_service_key,
 }
 
 missing_vars = [name for name, value in essential_vars.items() if not value]
@@ -90,16 +89,6 @@ config = {
             "api_key": google_api_key,
         }
     },
-    "history_manager": {
-        "provider": "postgres", # Assuming history is stored alongside vectors in Supabase/Postgres
-        "config": {
-            "url": supabase_url.replace("https://", "postgresql://postgres:").replace(".supabase.co", f":{supabase_service_key}@db.{supabase_url.split('.')[0]}.supabase.co:5432/postgres"), # Construct PG connection string
-            "table_name": "mem0_history" # Default or specify
-        }
-    },
-    # Optional: Add other configurations like ranking, retrieval, etc. if needed
-    # "retriever": { ... }
-    # "ranker": { ... }
 }
 
 logging.info("mem0 configuration prepared.")
