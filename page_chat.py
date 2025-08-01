@@ -147,7 +147,7 @@ if prompt := st.chat_input("Ask me anything..."):
             f"Relevant User Memories:\n{memories_str if memories_str else 'None'}"
         )
         gemini_messages = []
-        gemini_messages.append({'role': 'system', 'parts': [system_prompt]})
+        gemini_messages.append({'role': 'user', 'parts': [system_prompt]})
         # Include previous conversation turns (ensure roles are 'user'/'model' for Gemini)
         for msg in st.session_state.messages:
             role = "model" if msg["role"] == "assistant" else "user"
