@@ -1,11 +1,10 @@
 import streamlit as st
 from mem0 import Memory
-from dotenv import load_dotenv
 import logging
-import warnings
-from utils import Config, get_config, validate_variables, initialize_session_state_with_token, reset_conversation_state, refresh_tokens_panel, update_tokens
-import google.generativeai as genai
-from supabase import create_client, Client, AuthApiError
+from utils import Config
+from supabase import create_client, Client
+from google.generativeai.client import configure as genai_configure
+from google.generativeai.generative_models import GenerativeModel as genai_GenerativeModel
 
 
 
@@ -66,7 +65,6 @@ def get_ai_clients(_config):
     """
     mem_client = None
     gemini_client = None
-    supabase_client: Client | None = None
 
     mem0_config = build_mem0_config(_config)
 
@@ -85,9 +83,9 @@ def get_ai_clients(_config):
     try:
         if _config.embedding_model and _config.google_api_key:
             # Reason: Configures the global genai library with the API key.
-            genai.configure(api_key=_config.google_api_key)
+            genai_configure(api_key=_config.google_api_key)
             # Reason: Creates a client instance for the specified Gemini model.
-            gemini_client = genai.GenerativeModel(_config.llm_model)
+            gemini_client = genai_GenerativeModel(_config.llm_model)
             logging.info("App: Gemini client initialized successfully.")
         else:
              # Reason: Gemini client cannot function without an API key.
@@ -105,7 +103,7 @@ def get_ai_clients(_config):
 # Cache the clients using st.cache_resource to avoid re-initializing on every script rerun (e.g., user interaction).
 # Reason: Improves performance and avoids unnecessary setup/connection overhead.
 @st.cache_resource
-def get_supabase_client(_config):
+def get_supabase_client(_config) -> Client:
     """
     Initializes and returns the Supabase client based on the configuration.
     Uses st.cache_resource to ensure clients are created only once per session.
@@ -114,21 +112,17 @@ def get_supabase_client(_config):
         tuple: The initialized mem0, Gemini, and Supabase clients,
                or None if initialization fails.
     """
-    supabase_client: Client | None = None
-
     # Initialize Supabase client (for Auth)
     logging.info("App: Initializing Supabase client...")
-    try:
-        if _config.supabase_url and _config.supabase_anon_key:
-            # Reason: Creates the Supabase client instance needed for authentication operations.
-            supabase_client = create_client(_config.supabase_url, _config.supabase_anon_key)
-            logging.info("App: Supabase client initialized successfully.")
-        else:
-            # Reason: Supabase Auth requires both URL and Anon Key.
-            logging.error("App: SUPABASE_URL or SUPABASE_ANON_KEY not found for Supabase client initialization.")
-            st.error("SUPABASE_URL or SUPABASE_ANON_KEY not found. Cannot initialize Supabase client.")
-    except Exception as e:
-        logging.error(f"App: Failed to initialize Supabase client: {e}", exc_info=True)
-        st.error(f"Failed to initialize Supabase client: {e}")
+    if _config.supabase_url and _config.supabase_anon_key:
+        # Reason: Creates the Supabase client instance needed for authentication operations.
+        supabase_client: Client = create_client(_config.supabase_url, _config.supabase_anon_key)
+        logging.info("App: Supabase client initialized successfully.")
+        return supabase_client
+    else:
+        # Reason: Supabase Auth requires both URL and Anon Key.
+        logging.error("App: SUPABASE_URL or SUPABASE_ANON_KEY not found for Supabase client initialization.")
+        st.error("SUPABASE_URL or SUPABASE_ANON_KEY not found. Cannot initialize Supabase client.")
+        raise Exception("SUPABASE_URL or SUPABASE_ANON_KEY not found. Cannot initialize Supabase client")
 
     return supabase_client

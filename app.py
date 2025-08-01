@@ -27,10 +27,11 @@ logging.info("App: Loaded environment variables.")
 config = get_config(logging)
 
 # Load the clients (cached resources)
-supabase_client = get_supabase_client(config)
-
-if not supabase_client:
-    st.warning("Supabase client could not be initialized. Please check logs and configuration.")
+try:
+    supabase_client = get_supabase_client(config)
+except Exception as e:
+    logging.error(f"App: Failed to initialize Supabase client: {e}", exc_info=True)
+    st.error(f"Failed to initialize Supabase client: {e}")    
     st.stop() # Stop execution if clients fail to initialize
     
 initialize_session_state_with_token(st)

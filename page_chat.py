@@ -1,6 +1,6 @@
 from client_utils import get_ai_clients
 from dotenv import load_dotenv
-import google.generativeai as genai
+from google.generativeai import types as genai_types
 import logging
 import warnings
 from utils import (
@@ -75,7 +75,7 @@ with st.sidebar:
 
         # Add a toggle to show/hide memory info messages
         load_value("show_memory", default=False)
-        show_memory = st.toggle("Show memory information", key="_show_memory", on_change=store_value, args=["show_memory"])
+        show_memory = st.toggle("Show memory information", key="_show_memory", on_change=store_value, args=("show_memory",))
 
         # Token display placeholder - content will be updated by refresh_tokens_panel
         tokens_panel_placeholder = st.empty()
@@ -155,7 +155,7 @@ if prompt := st.chat_input("Ask me anything..."):
 
         # --- Step 3: Call Gemini LLM ---
         logging.info("Chat Page: Calling Gemini API...")
-        generation_config = genai.types.GenerationConfig(temperature=0.7)
+        generation_config = genai_types.GenerationConfig(temperature=0.7)
         safety_settings = [
             {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
             {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
@@ -196,7 +196,7 @@ if prompt := st.chat_input("Ask me anything..."):
              tokens_panel_placeholder.warning("Token counts may be inaccurate for the last message.")
 
         # --- Step 5: Add conversation turn to mem0 ---
-        if assistant_response and assistant_response.strip() and not assistant_response.startswith("[Error"):
+        if assistant_response and assistant_response is str and assistant_response.strip() and not assistant_response.startswith("[Error"):
             conversation_turn = [
                 {"role": "user", "content": prompt},
                 {"role": "assistant", "content": assistant_response}
