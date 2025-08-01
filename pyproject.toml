@@ -1,0 +1,18 @@
+[project]
+name = "gemini-mem0-streamlit"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dotenv>=0.9.9",
+    "google-genai>=1.28.0",
+    "google-generativeai>=0.8.5",
+    "langchain-neo4j>=0.4.0",
+    "mem0ai>=0.1.115",
+    "rank-bm25>=0.2.2",
+    "streamlit>=1.47.1",
+    "streamlit-agraph>=0.0.45",
+    "supabase>=2.17.0",
+    "vecs>=0.4.5",
+]
