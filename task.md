@@ -209,15 +209,15 @@ This document outlines the initial tasks required to get the Minimum Viable Prod
     *   [x] Move the sidebar elements (logout button, potentially token counts if they become global/summary) to be defined within the `if st.session_state.user_session:` block in `app.py` so they appear consistently across pages.
 *   [x] **8.6: Display tabular memories
     *   [x] Display the retrieved memories using `st.dataframe`. Handle the case where no memories are found.
-*   [ ] **8.7: Display graph memories
-    *   [ ] Add 'graph' tabs
-    *   [ ] Display graph 
-*   [ ] **8.8: Testing:** (User Action Required)
-    *   [ ] Run `streamlit run app.py`.
-    *   [ ] Test logging in and out.
-    *   [ ] Test navigating between the "Chat" and "Memory" pages using the sidebar.
-    *   [ ] Verify chat functionality works as before on the "Chat" page.
-    *   [ ] Verify memories are displayed correctly on the "Memory" page for the logged-in user.
-    *   [ ] Test adding new memories in chat and seeing them appear on the "Memory" page after refresh/navigation.
-    *   [ ] Ensure session state (chat history, token counts) persists correctly when switching pages.
-    *   [ ] Confirm logout works from any page and returns to the login screen.
+*   [x] **8.7: Display graph memories
+    *   [x] Add 'graph' tabs
+    *   [x] Display graph 
+*   [x] **8.8: Testing:** (User Action Required)
+    *   [x] Run `streamlit run app.py`.
+    *   [x] Test logging in and out.
+    *   [x] Test navigating between the "Chat" and "Memory" pages using the sidebar.
+    *   [x] Verify chat functionality works as before on the "Chat" page.
+    *   [x] Verify memories are displayed correctly on the "Memory" page for the logged-in user.
+    *   [x] Test adding new memories in chat and seeing them appear on the "Memory" page after refresh/navigation.
+    *   [x] Ensure session state (chat history, token counts) persists correctly when switching pages.
+    *   [x] Confirm logout works from any page and returns to the login screen.

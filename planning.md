@@ -55,27 +55,28 @@ The application will provide a simple chat interface. When a user types a messag
 *   **Authentication:** Supabase Auth
 *   **Graph Database:** Neo4j (AuraDB free tier recommended, or local Docker instance)
 *   **Frontend Framework:** Streamlit (with response streaming)
-*   **Environment Management:** `venv` or `conda`
-*   **Dependencies:** `mem0ai[supabase,neo4j,gemini]`, `streamlit`, `python-dotenv`, `supabase`, `google-generativeai` (potentially)
+*   **Environment Management:** `venv`
+*   **Dependency Management:** `uv`
+*   **Dependencies:** `mem0ai[supabase,neo4j,gemini]`, `streamlit`, `python-dotenv`, `supabase`, `google-generativeai`
 
 ## 5. Architecture Overview
 
-```
-+---------------+      +------------+      +-----------+
-| Streamlit UI  |----->| Python App |----->|  mem0     |
-| (Chat Interface)|    | (app.py)   |<-----| (Memory   |
-+---------------+      +------------+      |  Client)  |
-                                           +-----------+
-                                                  |
-      +----------------+----------------+--------+
-      |                |                |
-  +--------+      +------------+      +-----------+
-  | Gemini |      | Supabase   |      |  Neo4j    |
-  |  LLM   |      | (Vector    |      | (Graph    |
-  | (Processing  |   Store)    |      |  Store)   |
-  |  & Gen)      |            |      |           |
-  +--------+      +------------+      +-----------+
+```mermaid
+flowchart TD;
+  Streamlit["Streamlit UI (Chat Interface)"];
+  PythonApp["Python App (app.py)"];
+  Memory["mem0 (Memory Client)"];
+  Gemini["Gemini LLM (Processing & Gen)"];
+  Supabase["Supabase (Vector Store)"];
+  Neo4j["Neo4j (Graph Store)"];
 
+  Streamlit --> PythonApp;
+  PythonApp --> Memory;
+  Memory -->|Stores & Retrieves| PythonApp;
+  Memory -->|Interacts With| Gemini;
+  Memory -->|Stores Data In| Supabase;
+  Memory -->|Links Data In| Neo4j;
+  PythonApp --> |Interact With| Gemini;
 ```
 
 *   **Multi-page Structure (Phase 8):** The application will be refactored using Streamlit's native multi-page app features (`st.Page`, `st.navigation`).
