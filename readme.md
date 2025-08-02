@@ -1,36 +1,37 @@
 # mem0 Demo Project - Streamlit Chat
 
-This project demonstrates the capabilities of the `mem0` library for AI memory management, integrating it with Google Gemini, Supabase (vector store), and Neo4j (graph store) within a Streamlit chat application.
+This project demonstrates the capabilities of the [mem0](https://mem0.ai/) library for AI memory management, integrating it with [Google Gemini](https://aistudio.google.com/), [Supabase](https://streamlit.io/) (vector store), and [Neo4j](https://neo4j.com/) (graph store) within a [Streamlit](https://streamlit.io/) chat application.
+
+It is mainly a playground to investigate and learn and should be viewed as such.
 
 ## Features
 
 *   Chat interface powered by Streamlit.
-*   Conversation processing and memory management using `mem0`.
+*   Conversation processing and memory management using [mem0](https://mem0.ai/).
 *   LLM integration with Google Gemini for understanding and response generation.
 *   Vector memory storage via Supabase (pgvector).
 *   Graph memory storage via Neo4j.
-*   Persistence of memories witfor each user across sessions.
-*   User authentication using Supabase Auth.
+*   Persistence of memories for each user across sessions.
+*   User authentication using [Supabase Auth](https://supabase.com/docs/guides/auth).
 *   Display prompt, Response and Total tokens count for the current prompt and conversation.
 *   Sidebar displaying the LLM model in use and an option to clear the conversation UI.
 
 ## Prerequisite
-1.  Python 
-2.  **Optional: Install `uv` for dependency management**
+1.  **`uv` for Python version management and dependency management**
     `uv` is a fast Python package installer and resolver, written in Rust.
     To check if `uv` is already installed, run:
     ```bash
     uv --version
     ```
-    If `uv` is not found, you can install it using pip:
-    ```bash
-    pip install uv
+    If `uv` is not found, you can install it using a [standalone installer](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer) or through your [preferred package manager](https://docs.astral.sh/uv/getting-started/installation/#pypi). Make sure `uv --version` returns a version number before proceeding. For instance:
     ```
-
+    uv --version
+    uv 0.8.3 (7e78f54e7 2025-07-24)
+    ```
 
 ## Setup Instructions
 
-1.  **Clone the Repository (if applicable):**
+1.  **Clone the Repository:**
     ```bash
     git clone https://github.com/ytkaczyk/gemini-mem0-streamlit.git
     cd gemini-mem0-streamlit
@@ -43,7 +44,7 @@ This project demonstrates the capabilities of the `mem0` library for AI memory m
         ```
     *   *(This installs all necessary libraries including `mem0ai`, `streamlit`, `python-dotenv`, `google-generativeai`, and their dependencies specified in the `uv.lock` file.)*
 
-3.  **Get Google Gemini API Key:**
+3.  **Get a Google Gemini API Key:**
     *   Obtain a Google Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
 
 4.  **Setup Supabase:**

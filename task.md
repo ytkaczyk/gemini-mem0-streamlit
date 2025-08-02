@@ -24,24 +24,28 @@ This document outlines the initial tasks required to get the Minimum Viable Prod
     *   [x] Create a `.env` file in the project root.
     *   [x] Add credentials to `.env`:
         ```dotenv
-        # Gemini
-        GOOGLE_API_KEY="your_google_ai_api_key"
+        # Gemini config
+        # Obtain a key at https://aistudio.google.com/app/apikey
+        GOOGLE_API_KEY=""
+        # llm and embedding model
+        # Model list at https://ai.google.dev/gemini-api/docs/models
+        LLM_MODEL="gemini-2.0-flash"
+        # Embedding model list at https://ai.google.dev/gemini-api/docs/models#gemini-embedding and https://ai.google.dev/gemini-api/docs/models#text-embedding
+        EMBEDDING_MODEL="models/gemini-embedding-001"
+        EMBEDDING_MODEL_DIMS=1536
 
-        # Supabase
-        SUPABASE_URL="your_supabase_project_url"
-        SUPABASE_SERVICE_KEY="your_supabase_service_role_key"
-        SUPABASE_CONNECTION_STRING="your_supabase_connection_string" # Added during setup
-        # SUPABASE_TABLE_NAME="documents" # Optional: Specify if not default
+        # Neo4j config
+        # Sign up for a free account at https://supabase.com/ or self host
+        SUPABASE_URL="https://<supabase project ID>.supabase.co"
+        SUPABASE_ANON_KEY="<your anon key>"
+        SUPABASE_TABLE_NAME="mem0_memories"
+        SUPABASE_CONNECTION_STRING="<database connection string>"
 
-        # Neo4j
-        NEO4J_URI="your_neo4j_uri" # e.g., neo4j+s://instance.aura.net or bolt://localhost:7687
-        NEO4J_USERNAME="your_neo4j_username" # default is often 'neo4j'
-        NEO4J_PASSWORD="your_neo4j_password"
-
-        # Optional: Specify embedding/LLM models if overriding mem0 defaults
-        # EMBEDDING_MODEL="models/text-embedding-004"
-        # EMBEDDING_MODEL_DIMS="768" # Or 1536 depending on Supabase setup
-        # LLM_MODEL="gemini-1.5-flash-latest"
+        # Neo4j config
+        # Sign up for a free Neo4j AuraDB account at https://neo4j.com/product/auradb/ or self host. 
+        NEO4J_URI="neo4j+s://<neo4j aura project ID>>.databases.neo4j.io" 
+        NEO4J_USERNAME="<usually neo4j>"
+        NEO4J_PASSWORD="<your neo4j password>"
         ```
     *   [x] **Ensure `.env` is listed in `.gitignore`**.
 
@@ -154,16 +158,6 @@ This document outlines the initial tasks required to get the Minimum Viable Prod
     *   [x] Display cumulative values for 'Prompt token count', 'Response token count' and 'Total token count' for the entire conversation.
     *   [x] These values should be reset when the user clicks on 'Clear Conversation'.
 
-## Further Enhancements
-*   [x] Add a button to clear memory/session state.
-
-## (Optional) Further Enhancements
-
-*   [ ] Explore more advanced `mem0` search/query options.
-*   [ ] Improve Streamlit UI (e.g., loading spinners).
-*   [ ] Implement more robust error display to the user.
-
-
 ## Phase 8: Display Memories (April 11, 2025)
 
 *   [x] **8.1: Update Planning & Task Docs:**
@@ -177,6 +171,7 @@ This document outlines the initial tasks required to get the Minimum Viable Prod
     *   [x] Adapt imports and ensure necessary initializations (e.g., `mem0` client, potentially Supabase client if needed locally) are present or correctly accessed from session state/global scope.
     *   [x] Verify that session state variables (`messages`, `user_session`, token counts) are accessed correctly within the page context.
     *   [x] Ensure the authentication check (is user logged in?) is performed at the beginning of this page's logic.
+    *   [x] Add a button to clear memory/session state.
 *   [x] **8.4: Create `pages/2_Memory.py`:** (Completed April 11, 2025)
     *   [x] Create the file `pages/2_Memory.py`.
     *   [x] Add necessary imports (`streamlit`, `mem0`, `os`, `load_dotenv`, `supabase`).
@@ -207,9 +202,9 @@ This document outlines the initial tasks required to get the Minimum Viable Prod
             show_login_form() # Show login if not authenticated
         ```
     *   [x] Move the sidebar elements (logout button, potentially token counts if they become global/summary) to be defined within the `if st.session_state.user_session:` block in `app.py` so they appear consistently across pages.
-*   [x] **8.6: Display tabular memories
+*   [x] **8.6: Display tabular memories**
     *   [x] Display the retrieved memories using `st.dataframe`. Handle the case where no memories are found.
-*   [x] **8.7: Display graph memories
+*   [x] **8.7: Display graph memories**
     *   [x] Add 'graph' tabs
     *   [x] Display graph 
 *   [x] **8.8: Testing:** (User Action Required)
@@ -221,3 +216,10 @@ This document outlines the initial tasks required to get the Minimum Viable Prod
     *   [x] Test adding new memories in chat and seeing them appear on the "Memory" page after refresh/navigation.
     *   [x] Ensure session state (chat history, token counts) persists correctly when switching pages.
     *   [x] Confirm logout works from any page and returns to the login screen.
+
+## (Optional) Further Enhancements
+
+*   [ ] Explore more advanced `mem0` search/query options.
+*   [ ] Improve Streamlit UI (e.g., loading spinners).
+*   [ ] Implement more robust error display to the user.
+
