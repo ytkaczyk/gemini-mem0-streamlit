@@ -195,7 +195,7 @@ if prompt := st.chat_input("Ask me anything..."):
              tokens_panel_placeholder.warning("Token counts may be inaccurate for the last message.")
 
         # --- Step 5: Add conversation turn to mem0 ---
-        if assistant_response and type(assistant_response) is str and assistant_response.strip() and not assistant_response.startswith("[Error"):
+        if assistant_response and isinstance(assistant_response, str) and assistant_response.strip() and not assistant_response.startswith("[Error"):
             conversation_turn = [
                 {"role": "user", "content": prompt},
                 {"role": "assistant", "content": assistant_response}
