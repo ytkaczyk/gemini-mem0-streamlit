@@ -8,17 +8,17 @@ This is mainly a playground to investigate and learn and should be viewed as suc
 
 ## Features
 
-*   Streaming chat interface powered by [Streamlit](https://streamlit.io/).
-*   Conversation processing and memory management using [mem0](https://mem0.ai/).
-*   LLM integration with [Google Gemini](https://aistudio.google.com/) for chat generation and memory management.
-*   Vector memory storage via [Supabase](https://supabase.com/).
-*   Graph memory storage via [Neo4j](https://neo4j.com/).
-*   Persistence of memories for each user across sessions.
-*   User authentication using [Supabase Auth](https://supabase.com/docs/guides/auth).
-*   Display prompt, Response and Total tokens count for the current prompt and conversation.
-*   Sidebar displaying the LLM model in use and an option to clear the conversation UI.
-*   Display Mem0 memoyy interations.
-*   Implement basic Google Gemini moderation.
+*   ✅ Streaming chat interface powered by [Streamlit](https://streamlit.io/).
+*   ✅ Conversation processing and memory management using [mem0](https://mem0.ai/).
+*   ✅ LLM integration with [Google Gemini](https://aistudio.google.com/) for chat generation and memory management.
+*   ✅ Vector memory storage via [Supabase](https://supabase.com/).
+*   ✅ Graph memory storage via [Neo4j](https://neo4j.com/).
+*   ✅ Persistence of memories for each user across sessions.
+*   ✅ User authentication using [Supabase Auth](https://supabase.com/docs/guides/auth).
+*   ✅ Display prompt, Response and Total tokens count for the current prompt and conversation.
+*   ✅ Sidebar displaying the LLM model in use and an option to clear the conversation UI.
+*   ✅ Display Mem0 memory interactions.
+*   ✅ Implement basic Google Gemini moderation.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -65,9 +65,11 @@ This is mainly a playground to investigate and learn and should be viewed as suc
         *   Go to "Database" -> "Extensions" and search for "vector".
         *   Toggle it on.
     *   Configure the `Authentication` (optional)
-        *   For the purpose of the demo and to simplify account creation setup and allow usig any email address (e.g. `test@example.com`), it is convenient to disable email confirmation following accoutn creation.
+        *   For the purpose of the demo and to simplify account creation setup and allow using any email address (e.g. `test@example.com`), it is convenient to disable email confirmation following account creation.
 
-[Supabase - disable email confirmation](public/supabase_disable_email_confirm.png)        
+<p align="center">
+<img alt="Supabase - disable email confirmation" src="public/supabase_disable_email_confirm.png" />
+</p>
 
 5.  **Setup Neo4j:**
     *   Sign up for a free Neo4j AuraDB account at [https://neo4j.com/cloud/aura/](https://neo4j.com/cloud/aura/).
@@ -110,7 +112,7 @@ This is mainly a playground to investigate and learn and should be viewed as suc
         streamlit run app.py
         ```
     *   The application should open in your default web browser.
-    *   Create a user by entered an email address, password and clicking on `Sign Up`. If account creation email confirmaion was disabled in Supabase, the account is immediately available and can be used for logging in. 
+    *   Create a user by entering an email address, password and clicking on `Sign Up`. If account creation email confirmation was disabled in Supabase, the account is immediately available and can be used for logging in.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -121,11 +123,15 @@ This is mainly a playground to investigate and learn and should be viewed as suc
 
 Toggling the `Show Memory Information` under the `Conversation` section is helpful to see which memories are being retrieved and provided as extra context to the LLM prior to answering a prompt as well as how memories are add, deleted or updated. 
 
-[Show Memory Infomration toggle](public/chat_show_memory_information.png)
+<p align="center">
+<img alt="Show Memory Information toggle" src="public/chat_show_memory_information.png" />
+</p>
 
 The following conversation shows how a memory can be updated: 
 
-[Updating a memory](public/chat_updating_a_memory.png)
+<p align="center">
+<img alt="Updating a memory" src="public/chat_updating_a_memory.png" />
+</p>
 
 ### View user's memory
 
@@ -133,11 +139,15 @@ Navigate to the `Memory` to view the stored memories for the current user, both 
 
    *   Vector memories
 
-[Vector memories](public/memory_vector_memories.png)
+<p align="center">
+<img alt="Vector memories" src="public/memory_vector_memories.png" />
+</p>
 
    *   Graph memories
 
-[Graph memories](public/memory_graph_memories.png)
+<p align="center">
+<img alt="Graph memories" src="public/memory_graph_memories.png" />
+</p>
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
