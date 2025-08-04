@@ -76,7 +76,7 @@ flowchart TD;
   Memory -->|Interacts With| Gemini;
   Memory -->|Stores Data In| Supabase;
   Memory -->|Links Data In| Neo4j;
-  PythonApp --> |Interact With| Gemini;
+  PythonApp --> |Interacts With| Gemini;
 ```
 
 *   **Multi-page Structure (Phase 8):** The application will be refactored using Streamlit's native multi-page app features (`st.Page`, `st.navigation`).

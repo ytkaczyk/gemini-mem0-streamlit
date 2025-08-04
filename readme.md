@@ -1,24 +1,31 @@
+<a id="readme-top"></a>
+
 # mem0 Demo Project - Streamlit Chat
 
-This project demonstrates the capabilities of the [mem0](https://mem0.ai/) library for AI memory management, integrating it with [Google Gemini](https://aistudio.google.com/), [Supabase](https://streamlit.io/) (vector store), and [Neo4j](https://neo4j.com/) (graph store) within a [Streamlit](https://streamlit.io/) chat application.
+This project demonstrates how to create a learning chatbot using [mem0](https://mem0.ai/) library for AI memory management, integrating it with [Google Gemini](https://aistudio.google.com/), [Supabase](https://supabase.com/) (vector store), and [Neo4j](https://neo4j.com/) (graph store) within a [Streamlit](https://streamlit.io/) chat application.
 
-It is mainly a playground to investigate and learn and should be viewed as such.
+This is mainly a playground to investigate and learn and should be viewed as such.
 
 ## Features
 
-*   Chat interface powered by Streamlit.
+*   Streaming chat interface powered by [Streamlit](https://streamlit.io/).
 *   Conversation processing and memory management using [mem0](https://mem0.ai/).
-*   LLM integration with Google Gemini for understanding and response generation.
-*   Vector memory storage via Supabase (pgvector).
-*   Graph memory storage via Neo4j.
+*   LLM integration with [Google Gemini](https://aistudio.google.com/) for chat generation and memory management.
+*   Vector memory storage via [Supabase](https://supabase.com/).
+*   Graph memory storage via [Neo4j](https://neo4j.com/).
 *   Persistence of memories for each user across sessions.
 *   User authentication using [Supabase Auth](https://supabase.com/docs/guides/auth).
 *   Display prompt, Response and Total tokens count for the current prompt and conversation.
 *   Sidebar displaying the LLM model in use and an option to clear the conversation UI.
+*   Display Mem0 memoyy interations.
+*   Implement basic Google Gemini moderation.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Prerequisite
 1.  **`uv` for Python version management and dependency management**
-    `uv` is a fast Python package installer and resolver, written in Rust.
+
+    [`uv`](https://docs.astral.sh/uv/guides/install-python/) is a fast Python package installer and resolver, written in Rust.
     To check if `uv` is already installed, run:
     ```bash
     uv --version
@@ -28,6 +35,8 @@ It is mainly a playground to investigate and learn and should be viewed as such.
     uv --version
     uv 0.8.3 (7e78f54e7 2025-07-24)
     ```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Setup Instructions
 
@@ -55,6 +64,10 @@ It is mainly a playground to investigate and learn and should be viewed as such.
     *   Enable the `vector` extension in your Supabase database:
         *   Go to "Database" -> "Extensions" and search for "vector".
         *   Toggle it on.
+    *   Configure the `Authentication` (optional)
+        *   For the purpose of the demo and to simplify account creation setup and allow usig any email address (e.g. `test@example.com`), it is convenient to disable email confirmation following accoutn creation.
+
+[Supabase - disable email confirmation](public/supabase_disable_email_confirm.png)        
 
 5.  **Setup Neo4j:**
     *   Sign up for a free Neo4j AuraDB account at [https://neo4j.com/cloud/aura/](https://neo4j.com/cloud/aura/).
@@ -97,7 +110,60 @@ It is mainly a playground to investigate and learn and should be viewed as such.
         streamlit run app.py
         ```
     *   The application should open in your default web browser.
+    *   Create a user by entered an email address, password and clicking on `Sign Up`. If account creation email confirmaion was disabled in Supabase, the account is immediately available and can be used for logging in. 
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+## Points of interest
+
+### Showing memory information
+
+Toggling the `Show Memory Information` under the `Conversation` section is helpful to see which memories are being retrieved and provided as extra context to the LLM prior to answering a prompt as well as how memories are add, deleted or updated. 
+
+[Show Memory Infomration toggle](public/chat_show_memory_information.png)
+
+The following conversation shows how a memory can be updated: 
+
+[Updating a memory](public/chat_updating_a_memory.png)
+
+### View user's memory
+
+Navigate to the `Memory` to view the stored memories for the current user, both in the vector and graph data stores. 
+
+   *   Vector memories
+
+[Vector memories](public/memory_vector_memories.png)
+
+   *   Graph memories
+
+[Graph memories](public/memory_graph_memories.png)
+
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## How it Works
 
-*See [PLANNING.md](planning.md) for more architectural details and [TASK.md](task.md) for development status.*
+See [PLANNING.md](planning.md) for more architectural details and [TASK.md](task.md) for development status.
+
+### High level architecture
+
+```mermaid
+flowchart TD;
+  Streamlit["Streamlit UI (Chat Interface)"];
+  PythonApp["Python App (app.py)"];
+  Memory["mem0 (Memory Client)"];
+  Gemini["Gemini LLM (Processing & Gen)"];
+  Supabase["Supabase (Vector Store)"];
+  Neo4j["Neo4j (Graph Store)"];
+
+  Streamlit --> PythonApp;
+  PythonApp --> Memory;
+  Memory -->|Stores & Retrieves| PythonApp;
+  Memory -->|Interacts With| Gemini;
+  Memory -->|Stores Data In| Supabase;
+  Memory -->|Links Data In| Neo4j;
+  PythonApp --> |Interacts With| Gemini;
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
