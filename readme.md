@@ -1,91 +1,178 @@
+<a id="readme-top"></a>
+
 # mem0 Demo Project - Streamlit Chat
 
-This project demonstrates the capabilities of the `mem0` library for AI memory management, integrating it with Google Gemini, Supabase (vector store), and Neo4j (graph store) within a Streamlit chat application.
+This project demonstrates how to create a learning chatbot using [mem0](https://mem0.ai/) library for AI memory management, integrating it with [Google Gemini](https://aistudio.google.com/), [Supabase](https://supabase.com/) (vector store), and [Neo4j](https://neo4j.com/) (graph store) within a [Streamlit](https://streamlit.io/) chat application.
+
+This is mainly a playground to investigate and learn and should be viewed as such.
 
 ## Features
 
-*   Chat interface powered by Streamlit.
-*   Conversation processing and memory management using `mem0`.
-*   LLM integration with Google Gemini for understanding and response generation.
-*   Vector memory storage via Supabase (pgvector).
-*   Graph memory storage via Neo4j.
-*   Persistence of memories within a single user session.
-*   User authentication using Supabase Auth.
-*   Display prompt, Response and Total tokens count for the current prompt and conversation.
-*   Sidebar displaying the LLM model in use and an option to clear the conversation UI.
+*   ✅ Streaming chat interface powered by [Streamlit](https://streamlit.io/).
+*   ✅ Conversation processing and memory management using [mem0](https://mem0.ai/).
+*   ✅ LLM integration with [Google Gemini](https://aistudio.google.com/) for chat generation and memory management.
+*   ✅ Vector memory storage via [Supabase](https://supabase.com/).
+*   ✅ Graph memory storage via [Neo4j](https://neo4j.com/).
+*   ✅ Persistence of memories for each user across sessions.
+*   ✅ User authentication using [Supabase Auth](https://supabase.com/docs/guides/auth).
+*   ✅ Display prompt, Response and Total tokens count for the current prompt and conversation.
+*   ✅ Sidebar displaying the LLM model in use and an option to clear the conversation UI.
+*   ✅ Display Mem0 memory interactions.
+*   ✅ Implement basic Google Gemini moderation.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Prerequisite
+1.  **`uv` for Python version management and dependency management**
+
+    [`uv`](https://docs.astral.sh/uv/guides/install-python/) is a fast Python package installer and resolver, written in Rust.
+    To check if `uv` is already installed, run:
+    ```bash
+    uv --version
+    ```
+    If `uv` is not found, you can install it using a [standalone installer](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer) or through your [preferred package manager](https://docs.astral.sh/uv/getting-started/installation/#pypi). Make sure `uv --version` returns a version number before proceeding. For instance:
+    ```
+    uv --version
+    uv 0.8.3 (7e78f54e7 2025-07-24)
+    ```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Setup Instructions
 
-1.  **Clone the Repository (if applicable):**
+1.  **Clone the Repository:**
     ```bash
-    git clone <repository_url>
-    cd mem0-demo
+    git clone https://github.com/ytkaczyk/gemini-mem0-streamlit.git
+    cd gemini-mem0-streamlit
     ```
 
-2.  **Create and Activate Virtual Environment:**
-    *   Ensure you have Python 3.x installed.
-    *   Create a virtual environment:
+2.  **Install Dependencies:**
+    *   Install all required packages using `uv sync`:
         ```bash
-        python -m venv venv
+        uv sync
         ```
-    *   Activate the environment:
-        *   **Windows (cmd.exe):** `venv\Scripts\activate`
-        *   **Windows (PowerShell):** `.\venv\Scripts\Activate.ps1`
-        *   **macOS/Linux:** `source venv/bin/activate`
+    *   *(This installs all necessary libraries including `mem0ai`, `streamlit`, `python-dotenv`, `google-generativeai`, and their dependencies specified in the `uv.lock` file.)*
 
-3.  **Install Dependencies:**
-    *   Install all required packages from `requirements.txt`:
-        ```bash
-        pip install -r requirements.txt
-        ```
-    *   *(This installs all necessary libraries including `mem0ai`, `streamlit`, `python-dotenv`, `google-generativeai`, and their dependencies specified in the file.)*
+3.  **Get a Google Gemini API Key:**
+    *   Obtain a Google Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
 
-4.  **Configure Environment Variables:**
-    *   Create a file named `.env` in the project root directory (where `app.py` is located).
-    *   Add your credentials to the `.env` file. **Do not commit this file to Git.**
+4.  **Setup Supabase:**
+    *   Sign up for a free Supabase account at [https://supabase.com/](https://supabase.com/).
+    *   Create a new project.
+    *   Navigate to "Project Settings" -> "API" to find your `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
+    *   Go to "Database" -> "Connection String" to get your `SUPABASE_CONNECTION_STRING`. Ensure you use the "URI" format.
+    *   Enable the `vector` extension in your Supabase database:
+        *   Go to "Database" -> "Extensions" and search for "vector".
+        *   Toggle it on.
+    *   Configure the `Authentication` (optional)
+        *   For the purpose of the demo and to simplify account creation setup and allow using any email address (e.g. `test@example.com`), it is convenient to disable email confirmation following account creation.
+
+<p align="center">
+<img alt="Supabase - disable email confirmation" src="public/supabase_disable_email_confirm.png" />
+</p>
+
+5.  **Setup Neo4j:**
+    *   Sign up for a free Neo4j AuraDB account at [https://neo4j.com/cloud/aura/](https://neo4j.com/cloud/aura/).
+    *   Create a new Neo4j instance (a free tier is available).
+    *   Once your instance is created, download the connection details (usually a `.txt` file). This file will contain your `NEO4J_URI`, `NEO4J_USERNAME`, and `NEO4J_PASSWORD`.
+
+6.  **Configure Environment Variables:**
+    *   Copy `.example.env` to `.env` in the project root directory (where `app.py` is located).
+    *   Add the credentials from the previous steps to the `.env` file. **Never commit this file to Git.**
         ```dotenv
-        # --- Gemini ---
-        GOOGLE_API_KEY="your_google_ai_api_key"
+        # Gemini config
+        # Obtain a key at https://aistudio.google.com/app/apikey
+        GOOGLE_API_KEY="<your api key>"
+        # llm and embedding model
+        # Model list at https://ai.google.dev/gemini-api/docs/models
+        LLM_MODEL="gemini-2.0-flash"
+        # Embedding model list at https://ai.google.dev/gemini-api/docs/models#gemini-embedding and https://ai.google.dev/gemini-api/docs/models#text-embedding
+        EMBEDDING_MODEL="models/gemini-embedding-001"
+        EMBEDDING_MODEL_DIMS=1536
 
-        # --- Supabase ---
-        SUPABASE_URL="your_supabase_project_url"
-        SUPABASE_SERVICE_KEY="your_supabase_service_role_key"
-        # Replace with your actual Supabase database connection string
-        SUPABASE_CONNECTION_STRING="postgresql://postgres:[YOUR-PASSWORD]@[YOUR-HOST]:5432/postgres"
-        # Optional: Specify if not using the default table name 'documents'
-        # SUPABASE_TABLE_NAME="your_custom_table_name"
+        # Supabase config
+        # Sign up for a free account at https://supabase.com/ or self host
+        SUPABASE_URL="https://<supabase project ID>.supabase.co"
+        SUPABASE_ANON_KEY="<your anon key>"
+        SUPABASE_TABLE_NAME="mem0_memories"
+        SUPABASE_CONNECTION_STRING="<database connection string>"
 
-        # --- Neo4j ---
-        # e.g., neo4j+s://instance.aura.net or bolt://localhost:7687
-        NEO4J_URI="your_neo4j_uri"
-        # Default username is often 'neo4j'
-        NEO4J_USERNAME="your_neo4j_username"
-        NEO4J_PASSWORD="your_neo4j_password"
-
-        # --- LLM / Embeddings ---
-        LLM_MODEL="gemini-2.0-flash-001"
-        EMBEDDING_MODEL="models/gemini-embedding-exp-03-07"
-        # Ensure this matches the dimensions expected by your Supabase setup (e.g., 768 for text-embedding-004)
-        EMBEDDING_MODEL_DIMS="1536"
+        # Neo4j config
+        # Sign up for a free Neo4j AuraDB account at https://neo4j.com/product/auradb/ or self host. 
+        NEO4J_URI="neo4j+s://<neo4j aura project ID>.databases.neo4j.io" 
+        NEO4J_USERNAME="<usually neo4j>"
+        NEO4J_PASSWORD="<your neo4j password>"
         ```
     *   Ensure your Supabase database has the `vector` extension enabled.
     *   Ensure your Neo4j instance is running and accessible.
 
-5.  **Run the Application:**
+7.  **Run the Application:**
     *   Execute the following command in your terminal (with the virtual environment activated):
         ```bash
         streamlit run app.py
         ```
     *   The application should open in your default web browser.
+    *   Create a user by entering an email address, password and clicking on `Sign Up`. If account creation email confirmation was disabled in Supabase, the account is immediately available and can be used for logging in.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+## Points of interest
+
+### Showing memory information
+
+Toggling the `Show Memory Information` under the `Conversation` section is helpful to see which memories are being retrieved and provided as extra context to the LLM prior to answering a prompt as well as how memories are add, deleted or updated. 
+
+<p align="center">
+<img alt="Show Memory Information toggle" src="public/chat_show_memory_information.png" />
+</p>
+
+The following conversation shows how a memory can be updated: 
+
+<p align="center">
+<img alt="Updating a memory" src="public/chat_updating_a_memory.png" />
+</p>
+
+### View user's memory
+
+Navigate to the `Memory` to view the stored memories for the current user, both in the vector and graph data stores. 
+
+   *   Vector memories
+
+<p align="center">
+<img alt="Vector memories" src="public/memory_vector_memories.png" />
+</p>
+
+   *   Graph memories
+
+<p align="center">
+<img alt="Graph memories" src="public/memory_graph_memories.png" />
+</p>
+
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## How it Works
 
-1.  The Streamlit UI captures user input.
-2.  The input is sent to the `mem0` client initialized in `app.py`.
-3.  `mem0` uses its configured LLM (Gemini) and Embedder to process the input.
-4.  Relevant information is stored as vectors in Supabase and as graph data in Neo4j.
-5.  `mem0` searches these stores for relevant context based on the current input.
-6.  The retrieved context and the user input are used by the LLM to generate a response.
-7.  The response is displayed in the Streamlit UI.
+See [PLANNING.md](planning.md) for more architectural details and [TASK.md](task.md) for development status.
 
-*(This is an initial version. See `PLANNING.md` for more architectural details and `TASK.md` for development status.)*
+### High level architecture
+
+```mermaid
+flowchart TD;
+  Streamlit["Streamlit UI (Chat Interface)"];
+  PythonApp["Python App (app.py)"];
+  Memory["mem0 (Memory Client)"];
+  Gemini["Gemini LLM (Processing & Gen)"];
+  Supabase["Supabase (Vector Store)"];
+  Neo4j["Neo4j (Graph Store)"];
+
+  Streamlit --> PythonApp;
+  PythonApp <-->|Stores & Retrieves data| Memory; 
+  Memory -->|Interacts With| Gemini;
+  Memory -->|Stores Data In| Supabase;
+  Memory -->|Links Data In| Neo4j;
+  PythonApp --> |Interacts With| Gemini;
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
