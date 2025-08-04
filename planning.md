@@ -71,8 +71,7 @@ flowchart TD;
   Neo4j["Neo4j (Graph Store)"];
 
   Streamlit --> PythonApp;
-  PythonApp --> Memory;
-  Memory -->|Stores & Retrieves| PythonApp;
+  PythonApp <-->|Stores & Retrieves data| Memory; 
   Memory -->|Interacts With| Gemini;
   Memory -->|Stores Data In| Supabase;
   Memory -->|Links Data In| Neo4j;

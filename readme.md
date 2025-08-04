@@ -90,7 +90,7 @@ This is mainly a playground to investigate and learn and should be viewed as suc
         EMBEDDING_MODEL="models/gemini-embedding-001"
         EMBEDDING_MODEL_DIMS=1536
 
-        # Neo4j config
+        # Supabase config
         # Sign up for a free account at https://supabase.com/ or self host
         SUPABASE_URL="https://<supabase project ID>.supabase.co"
         SUPABASE_ANON_KEY="<your anon key>"
@@ -99,7 +99,7 @@ This is mainly a playground to investigate and learn and should be viewed as suc
 
         # Neo4j config
         # Sign up for a free Neo4j AuraDB account at https://neo4j.com/product/auradb/ or self host. 
-        NEO4J_URI="neo4j+s://<neo4j aura project ID>>.databases.neo4j.io" 
+        NEO4J_URI="neo4j+s://<neo4j aura project ID>.databases.neo4j.io" 
         NEO4J_USERNAME="<usually neo4j>"
         NEO4J_PASSWORD="<your neo4j password>"
         ```
@@ -168,8 +168,7 @@ flowchart TD;
   Neo4j["Neo4j (Graph Store)"];
 
   Streamlit --> PythonApp;
-  PythonApp --> Memory;
-  Memory -->|Stores & Retrieves| PythonApp;
+  PythonApp <-->|Stores & Retrieves data| Memory; 
   Memory -->|Interacts With| Gemini;
   Memory -->|Stores Data In| Supabase;
   Memory -->|Links Data In| Neo4j;
