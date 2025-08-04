@@ -94,7 +94,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# response chunker (copied from app.py)
+# response chunker
 def chunk_response(response):
     try:
         for chunk in response:
@@ -106,7 +106,6 @@ def chunk_response(response):
     except Exception as e: # Catch other potential errors during iteration
         logging.error(f"Chat Page: Unexpected error during response chunking: {e}", exc_info=True)
         yield f"[Error processing response chunk: {e}]"
-
 
 # --- Chat Input and Processing ---
 if prompt := st.chat_input("Ask me anything..."):
@@ -173,7 +172,7 @@ if prompt := st.chat_input("Ask me anything..."):
         assistant_response = ""
         with st.chat_message("assistant"):
             try:
-                # Use the chunk_response helper function
+                # Use the chunk_response helper function to stream the response
                 assistant_response = st.write_stream(chunk_response(gemini_response))
 
             except Exception as exc:
@@ -196,7 +195,7 @@ if prompt := st.chat_input("Ask me anything..."):
              tokens_panel_placeholder.warning("Token counts may be inaccurate for the last message.")
 
         # --- Step 5: Add conversation turn to mem0 ---
-        if assistant_response and assistant_response is str and assistant_response.strip() and not assistant_response.startswith("[Error"):
+        if assistant_response and isinstance(assistant_response, str) and assistant_response.strip() and not assistant_response.startswith("[Error"):
             conversation_turn = [
                 {"role": "user", "content": prompt},
                 {"role": "assistant", "content": assistant_response}
