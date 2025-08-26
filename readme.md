@@ -22,7 +22,7 @@ This is mainly a playground to investigate and learn and should be viewed as suc
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Prerequisite
+## Prerequisites
 1.  **`uv` for Python version management and dependency management**
 
     [`uv`](https://docs.astral.sh/uv/guides/install-python/) is a fast Python package installer and resolver, written in Rust.
@@ -116,6 +116,26 @@ This is mainly a playground to investigate and learn and should be viewed as suc
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## AI coding assistance with Cline
+
+Cline AI for VSCode was used to generate the application. Cline AI is an open-source coding agent that can understand entire codebases, plan complex changes, and execute multi-step tasks. In order to provide strong guidance and predictable steps to the coding agent, the application was generated using the following steps:
+* Create [`.clinerules`](./.clinerules) file to provide overall rules to Cline. This file is somewhat generic and can be reused across projects. See [documentation](https://docs.cline.bot/features/cline-rules).  The Github Copilot documentation also provides good guidance on creating system-wide, [project](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions) and personal level rules.
+* Create the [planning.md](./planning.md) and [task.md](task.md) files. This was done using the [following prompt](./prompts/md-file-generation-prompt.txt):
+```
+I am planning to create a project with python for demonstrating the mem0 library (https://docs.mem0.ai/overview). I want the demo to use:
+- Supabase as a vector database (https://docs.mem0.ai/components/vectordbs/dbs/supabase)
+- neo4j as a graph database (https://docs.mem0.ai/open-source/graph_memory/overview)
+- gemini as LLM (https://docs.mem0.ai/components/llms/models/gemini)
+- Provide a chat based frontend using streamlit (https://streamlit.io/)
+You can perform grounded searches to learn more about the technology. 
+Then create a PLANNING.md and TASK.md files.
+
+PLANNING.md - high level direction, scope, tech, etc.
+TASK.md - initial tasks to knock out for the project
+```
+* Review and edit the [planning.md](./planning.md) and [task.md](task.md) files.
+* Ask Cline to implement the code by following the task sequence in [task.md](task.md).
+* Add new features by asking Cline to add tasks to task.md and then implementing them. 
 
 ## Points of interest
 
